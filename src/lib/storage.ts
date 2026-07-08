@@ -31,10 +31,23 @@ export function toggleInList(key: string, id: string): boolean {
   return !has;
 }
 
-export function incrementCounter(key: string) {
+export function addToCounter(key: string, amount: number) {
   const current = Number(typeof window === "undefined" ? 0 : window.localStorage.getItem(key) ?? "0");
-  window.localStorage.setItem(key, String(current + 1));
+  window.localStorage.setItem(key, String(current + amount));
   window.dispatchEvent(new Event(CHANGE_EVENT));
+}
+
+export function incrementCounter(key: string) {
+  addToCounter(key, 1);
+}
+
+/** Crédite des points une seule fois par action (empêche de farmer en répétant le même geste). */
+export function awardOnce(actionKey: string, points: number): boolean {
+  const rewarded = readList(STORAGE_KEYS.rewardedActions);
+  if (rewarded.includes(actionKey)) return false;
+  addUnique(STORAGE_KEYS.rewardedActions, actionKey);
+  addToCounter(STORAGE_KEYS.points, points);
+  return true;
 }
 
 export function readCounter(key: string): number {
@@ -92,4 +105,35 @@ export const STORAGE_KEYS = {
   saved: "corner-ai:saved-items",
   visits: "corner-ai:visit-dates",
   shareCount: "corner-ai:share-count",
+  points: "corner-ai:points",
+  rewardedActions: "corner-ai:rewarded-actions",
 } as const;
+
+export const POINTS = {
+  openCard: 5,
+  advanceSlide: 3,
+  readArticle: 10,
+  share: 15,
+  save: 5,
+} as const;
+
+export interface Rank {
+  name: string;
+  min: number;
+  next: number | null;
+}
+
+export const RANKS: Rank[] = [
+  { name: "Curieux", min: 0, next: 50 },
+  { name: "Initié", min: 50, next: 150 },
+  { name: "Membre du Corner", min: 150, next: 350 },
+  { name: "Insider", min: 350, next: 700 },
+  { name: "Référence IA", min: 700, next: 1500 },
+  { name: "Légende du Corner", min: 1500, next: null },
+];
+
+export function getRank(points: number): { rank: Rank; progress: number } {
+  const rank = [...RANKS].reverse().find((r) => points >= r.min) ?? RANKS[0];
+  const progress = rank.next === null ? 1 : Math.min(1, (points - rank.min) / (rank.next - rank.min));
+  return { rank, progress };
+}

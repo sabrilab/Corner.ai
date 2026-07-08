@@ -5,9 +5,19 @@ import { Flame } from "lucide-react";
 import { clsx } from "clsx";
 import { FeedCard } from "@/components/FeedCard";
 import { StoryViewer } from "@/components/StoryViewer";
+import { FeedHeader } from "@/components/FeedHeader";
 import type { FeedCategory, FeedItem } from "@/lib/types";
 import { feedCategoryStyles } from "@/lib/theme";
-import { STORAGE_KEYS, addUnique, computeStreak, useStoredList, useStoredSet } from "@/lib/storage";
+import {
+  STORAGE_KEYS,
+  POINTS,
+  addUnique,
+  awardOnce,
+  computeStreak,
+  useStoredCounter,
+  useStoredList,
+  useStoredSet,
+} from "@/lib/storage";
 
 const FILTERS: { label: string; value: FeedCategory | "tous" }[] = [
   { label: "Tous", value: "tous" },
@@ -24,6 +34,7 @@ export function FeedClient({ items }: { items: FeedItem[] }) {
   const readIds = useStoredSet(STORAGE_KEYS.read);
   const savedIds = useStoredSet(STORAGE_KEYS.saved);
   const visits = useStoredList(STORAGE_KEYS.visits);
+  const points = useStoredCounter(STORAGE_KEYS.points);
   const streak = computeStreak(visits);
 
   useEffect(() => {
@@ -33,6 +44,7 @@ export function FeedClient({ items }: { items: FeedItem[] }) {
   function openStory(item: FeedItem) {
     setOpenItem(item);
     addUnique(STORAGE_KEYS.read, item.id);
+    awardOnce(`open:${item.id}`, POINTS.openCard);
   }
 
   const visibleItems = filter === "tous" ? items : items.filter((i) => i.category === filter);
@@ -40,6 +52,8 @@ export function FeedClient({ items }: { items: FeedItem[] }) {
 
   return (
     <div className="flex flex-col gap-4 pb-4">
+      <FeedHeader points={points} />
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-extrabold tracking-tight text-foreground">

@@ -5,7 +5,7 @@ import { X, Share2, ArrowUpRight, Bookmark } from "lucide-react";
 import { clsx } from "clsx";
 import type { FeedItem } from "@/lib/types";
 import { feedCategoryStyles } from "@/lib/theme";
-import { STORAGE_KEYS, incrementCounter, toggleInList } from "@/lib/storage";
+import { POINTS, STORAGE_KEYS, addToCounter, awardOnce, incrementCounter, toggleInList } from "@/lib/storage";
 
 const SWIPE_THRESHOLD = 50;
 
@@ -41,13 +41,16 @@ export function StoryViewer({
   }, []);
 
   function toggleSave() {
-    toggleInList(STORAGE_KEYS.saved, item.id);
+    const nowSaved = toggleInList(STORAGE_KEYS.saved, item.id);
+    if (nowSaved) awardOnce(`save:${item.id}`, POINTS.save);
   }
   const touchStartX = useRef<number | null>(null);
   const touchDeltaX = useRef(0);
 
   function goTo(i: number) {
-    setIndex(Math.max(0, Math.min(i, item.slides.length - 1)));
+    const clamped = Math.max(0, Math.min(i, item.slides.length - 1));
+    setIndex(clamped);
+    if (clamped > 0) awardOnce(`slide:${item.id}:${clamped}`, POINTS.advanceSlide);
   }
 
   function onTouchStart(e: React.TouchEvent) {
@@ -74,13 +77,19 @@ export function StoryViewer({
       try {
         await navigator.share({ title: item.title, text, url: item.sourceUrl });
         incrementCounter(STORAGE_KEYS.shareCount);
+        addToCounter(STORAGE_KEYS.points, POINTS.share);
       } catch {
         // partage annulé par l'utilisateur
       }
     } else if (typeof navigator !== "undefined" && navigator.clipboard) {
       await navigator.clipboard.writeText(`${item.title}\n${item.sourceUrl}`);
       incrementCounter(STORAGE_KEYS.shareCount);
+      addToCounter(STORAGE_KEYS.points, POINTS.share);
     }
+  }
+
+  function onReadArticle() {
+    awardOnce(`readlink:${item.id}`, POINTS.readArticle);
   }
 
   return (
@@ -174,6 +183,7 @@ export function StoryViewer({
                     href={item.sourceUrl}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={onReadArticle}
                     className="mt-2 flex w-fit items-center gap-1.5 rounded-full bg-[#14151a] px-4 py-2.5 text-[13px] font-bold text-white"
                   >
                     Lire l&apos;article
