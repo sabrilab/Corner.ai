@@ -1,4 +1,4 @@
-export type FeedCategory = "release" | "paper" | "update" | "benchmark" | "content";
+export type FeedCategory = "release" | "paper" | "update" | "benchmark" | "content" | "moves";
 
 export interface FeedSlide {
   title: string;

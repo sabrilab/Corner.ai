@@ -1,6 +1,15 @@
 "use client";
 
-import { Image as ImageIcon, FlaskConical, TrendingUp, RefreshCw, ArrowUpRight } from "lucide-react";
+import {
+  Image as ImageIcon,
+  FlaskConical,
+  TrendingUp,
+  RefreshCw,
+  ArrowUpRight,
+  Users,
+  Check,
+} from "lucide-react";
+import { clsx } from "clsx";
 import type { FeedItem } from "@/lib/types";
 import { feedCategoryStyles } from "@/lib/theme";
 
@@ -10,13 +19,16 @@ const CATEGORY_ICON: Record<FeedItem["category"], typeof FlaskConical> = {
   update: RefreshCw,
   benchmark: TrendingUp,
   content: ImageIcon,
+  moves: Users,
 };
 
 export function FeedCard({
   item,
+  read,
   onOpen,
 }: {
   item: FeedItem;
+  read: boolean;
   onOpen: (item: FeedItem) => void;
 }) {
   const style = feedCategoryStyles[item.category];
@@ -25,10 +37,14 @@ export function FeedCard({
   return (
     <button
       onClick={() => onOpen(item)}
-      className={`relative flex w-full flex-col gap-3 rounded-3xl ${style.bg} p-4 text-left transition-transform active:scale-[0.98]`}
+      className={clsx(
+        "relative flex w-full flex-col gap-3 rounded-3xl p-4 text-left transition-all active:scale-[0.98]",
+        style.bg,
+        read && "opacity-45 saturate-[0.35]"
+      )}
     >
       <span className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-[#14151a] text-white">
-        <ArrowUpRight size={16} strokeWidth={2} />
+        {read ? <Check size={16} strokeWidth={2.5} /> : <ArrowUpRight size={16} strokeWidth={2} />}
       </span>
 
       {item.imageUrl ? (
@@ -46,6 +62,11 @@ export function FeedCard({
           <Icon size={11} strokeWidth={2.5} />
           {style.label}
         </span>
+        {read ? (
+          <span className="rounded-full bg-black/10 px-2.5 py-1 text-[10px] font-bold text-black/50">
+            Lu
+          </span>
+        ) : null}
       </div>
 
       <h3 className={`max-w-[85%] text-[16px] font-extrabold leading-snug tracking-tight ${style.text}`}>

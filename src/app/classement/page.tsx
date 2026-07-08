@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { clsx } from "clsx";
+import { ArrowUpRight } from "lucide-react";
 import { ModelCard } from "@/components/ModelCard";
 import { modelEntries } from "@/lib/mock-data";
 import { modelCategoryStyles } from "@/lib/theme";
@@ -27,11 +28,22 @@ export default function ClassementPage() {
 
   return (
     <div className="flex flex-col gap-4 pb-4">
-      <div>
-        <h1 className="text-xl font-extrabold tracking-tight text-foreground">Classement</h1>
-        <p className="text-[13px] text-foreground/50">
-          Score agrégé : arena, qualité/prix, signal marché
-        </p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-extrabold tracking-tight text-foreground">Classement</h1>
+          <p className="text-[13px] text-foreground/50">
+            Score agrégé : arena, qualité/prix, signal marché
+          </p>
+        </div>
+        <a
+          href="https://lmarena.ai/leaderboard"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex shrink-0 items-center gap-1 rounded-full border border-border bg-surface px-3 py-1.5 text-[11px] font-bold text-foreground/60"
+        >
+          LMArena
+          <ArrowUpRight size={12} strokeWidth={2.5} />
+        </a>
       </div>
 
       <div className="-mx-4 flex gap-2 overflow-x-auto px-4">

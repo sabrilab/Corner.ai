@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronLeft, Check } from "lucide-react";
-import { getModelBySlug } from "@/lib/mock-data";
+import { ChevronLeft, ChevronRight, Check } from "lucide-react";
+import { getModelBySlug, getAdjacentModels } from "@/lib/mock-data";
 import { modelCategoryStyles } from "@/lib/theme";
 
 export default async function ModelDetailPage({
@@ -14,6 +14,7 @@ export default async function ModelDetailPage({
   if (!model) notFound();
 
   const style = modelCategoryStyles[model.category];
+  const { prev, next } = getAdjacentModels(slug);
 
   return (
     <div className="flex flex-col gap-6 pb-4">
@@ -66,6 +67,31 @@ export default async function ModelDetailPage({
             {s}
           </div>
         ))}
+      </div>
+
+      <div className="flex items-center justify-between gap-3 border-t border-border pt-4">
+        {prev ? (
+          <Link
+            href={`/classement/${prev.slug}`}
+            className="flex min-w-0 flex-1 items-center gap-1.5 rounded-2xl border border-border bg-surface px-3 py-2.5 text-left"
+          >
+            <ChevronLeft size={16} className="shrink-0 text-foreground/40" />
+            <span className="min-w-0 truncate text-[13px] font-bold text-foreground">{prev.name}</span>
+          </Link>
+        ) : (
+          <div className="flex-1" />
+        )}
+        {next ? (
+          <Link
+            href={`/classement/${next.slug}`}
+            className="flex min-w-0 flex-1 items-center justify-end gap-1.5 rounded-2xl border border-border bg-surface px-3 py-2.5 text-right"
+          >
+            <span className="min-w-0 truncate text-[13px] font-bold text-foreground">{next.name}</span>
+            <ChevronRight size={16} className="shrink-0 text-foreground/40" />
+          </Link>
+        ) : (
+          <div className="flex-1" />
+        )}
       </div>
     </div>
   );

@@ -11,12 +11,9 @@ export function TopNav() {
   return (
     <header className="fixed inset-x-0 top-0 z-40 border-b border-border bg-background/90 backdrop-blur-md">
       <div className="mx-auto flex h-14 max-w-lg items-center justify-between px-4">
-        <Link href="/feed" className="flex items-baseline gap-0.5">
+        <Link href="/feed" className="flex items-baseline">
           <span className="text-[19px] font-extrabold tracking-tight text-foreground">
             corner
-          </span>
-          <span className="text-[13px] font-bold tracking-tight text-violet-500">
-            .ai
           </span>
         </Link>
 

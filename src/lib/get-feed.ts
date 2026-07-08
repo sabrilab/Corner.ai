@@ -1,15 +1,18 @@
 import { feedSources } from "./feed-sources";
 import { fetchRssItems, type RssItem } from "./rss";
 import { fetchOgImage } from "./og-image";
+import { summarizeInFrench } from "./summarize";
 import { feedItems as fallbackItems } from "./mock-data";
 import type { FeedItem } from "./types";
 
-const MAX_ITEMS = 14;
-const MAX_OG_IMAGE_LOOKUPS = 10;
+const MAX_ITEMS = 16;
+const MAX_OG_IMAGE_LOOKUPS = 12;
+const MAX_SUMMARIES = 10;
 
 interface SourcedItem extends RssItem {
   sourceName: string;
   category: FeedItem["category"];
+  skipImage?: boolean;
 }
 
 export async function getFeedItems(): Promise<FeedItem[]> {
@@ -20,6 +23,7 @@ export async function getFeedItems(): Promise<FeedItem[]> {
         ...item,
         sourceName: source.name,
         category: source.category,
+        skipImage: source.skipImage,
       }));
     })
   );
@@ -32,34 +36,52 @@ export async function getFeedItems(): Promise<FeedItem[]> {
 
   if (merged.length === 0) return fallbackItems;
 
-  let lookupsLeft = MAX_OG_IMAGE_LOOKUPS;
-  const resolved = await Promise.all(
+  let imageLookupsLeft = MAX_OG_IMAGE_LOOKUPS;
+  const withImages = await Promise.all(
     merged.map(async (item) => {
       if (item.image) return item;
-      // Les papiers de recherche n'ont pas d'image dédiée par article, juste un logo générique.
-      if (item.category === "paper") return item;
-      if (lookupsLeft <= 0) return item;
-      lookupsLeft -= 1;
+      // Les papiers de recherche et les liens Google News n'ont pas d'image exploitable côté serveur.
+      if (item.category === "paper" || item.skipImage) return item;
+      if (imageLookupsLeft <= 0) return item;
+      imageLookupsLeft -= 1;
       const image = await fetchOgImage(item.link);
       return { ...item, image };
     })
   );
 
-  return resolved.map(toFeedItem);
+  let summariesLeft = MAX_SUMMARIES;
+  const withSummaries = await Promise.all(
+    withImages.map(async (item) => {
+      if (summariesLeft <= 0) return { item, fr: null };
+      summariesLeft -= 1;
+      const fr = await summarizeInFrench({
+        title: item.title,
+        summary: item.summary,
+        source: item.sourceName,
+      });
+      return { item, fr };
+    })
+  );
+
+  return withSummaries.map(({ item, fr }) => toFeedItem(item, fr));
 }
 
-function toFeedItem(item: SourcedItem): FeedItem {
+function toFeedItem(
+  item: SourcedItem,
+  fr: Awaited<ReturnType<typeof summarizeInFrench>>
+): FeedItem {
   return {
     id: item.link,
     category: item.category,
-    title: item.title,
+    title: fr?.title || item.title,
     source: item.sourceName,
     sourceUrl: item.link,
     publishedAt: timeAgo(item.publishedAt),
-    summary: item.summary || "Pas de résumé disponible, ouvre l'article pour le détail.",
+    summary:
+      fr?.cardSummary || item.summary || "Pas de résumé disponible, ouvre l'article pour le détail.",
     mediaKind: item.image ? "image" : "none",
     imageUrl: item.image,
-    slides: [
+    slides: fr?.slides ?? [
       {
         title: "L'essentiel",
         body: item.summary || "Ouvre l'article pour le détail complet.",
