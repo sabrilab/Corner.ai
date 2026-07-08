@@ -45,7 +45,7 @@ export function FeedClient({ items }: { items: FeedItem[] }) {
   function openStory(item: FeedItem) {
     setOpenItem(item);
     addUnique(STORAGE_KEYS.read, item.id);
-    awardOnce(`open:${item.id}`, POINTS.openCard);
+    awardOnce(`open:${item.id}`, POINTS.openCard, "Carte ouverte");
   }
 
   const visibleItems = filter === "tous" ? items : items.filter((i) => i.category === filter);
@@ -90,14 +90,19 @@ export function FeedClient({ items }: { items: FeedItem[] }) {
       </div>
 
       <div className="flex flex-col gap-3">
-        {visibleItems.map((item) => (
-          <FeedCard
+        {visibleItems.map((item, index) => (
+          <div
             key={item.id}
-            item={item}
-            read={readIds.has(item.id)}
-            saved={savedIds.has(item.id)}
-            onOpen={openStory}
-          />
+            className="animate-card-in"
+            style={{ animationDelay: `${Math.min(index, 8) * 45}ms` }}
+          >
+            <FeedCard
+              item={item}
+              read={readIds.has(item.id)}
+              saved={savedIds.has(item.id)}
+              onOpen={openStory}
+            />
+          </div>
         ))}
         {visibleItems.length === 0 ? (
           <p className="py-10 text-center text-[13px] text-foreground/40">

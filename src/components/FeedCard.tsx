@@ -50,9 +50,11 @@ export function FeedCard({
       )}
     >
       <span
+        key={read ? "read" : "unread"}
         className={clsx(
           "absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full",
-          isDark ? "bg-white/15 text-white" : "bg-[#14151a] text-white"
+          isDark ? "bg-white/15 text-white" : "bg-[#14151a] text-white",
+          read && "animate-pop"
         )}
       >
         {read ? <Check size={16} strokeWidth={2.5} /> : <ArrowUpRight size={16} strokeWidth={2} />}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useSyncExternalStore } from "react";
+import { emitPointsToast } from "./toast-bus";
 
 const CHANGE_EVENT = "corner-ai:storage-changed";
 
@@ -41,12 +42,18 @@ export function incrementCounter(key: string) {
   addToCounter(key, 1);
 }
 
+/** Crédite des points, avec un petit toast pour le faire sentir. */
+export function awardPoints(points: number, label?: string) {
+  addToCounter(STORAGE_KEYS.points, points);
+  emitPointsToast(points, label);
+}
+
 /** Crédite des points une seule fois par action (empêche de farmer en répétant le même geste). */
-export function awardOnce(actionKey: string, points: number): boolean {
+export function awardOnce(actionKey: string, points: number, label?: string): boolean {
   const rewarded = readList(STORAGE_KEYS.rewardedActions);
   if (rewarded.includes(actionKey)) return false;
   addUnique(STORAGE_KEYS.rewardedActions, actionKey);
-  addToCounter(STORAGE_KEYS.points, points);
+  awardPoints(points, label);
   return true;
 }
 

@@ -5,7 +5,7 @@ import { X, Share2, ArrowUpRight, Bookmark } from "lucide-react";
 import { clsx } from "clsx";
 import type { FeedItem } from "@/lib/types";
 import { feedCategoryStyles } from "@/lib/theme";
-import { POINTS, STORAGE_KEYS, addToCounter, awardOnce, incrementCounter, toggleInList } from "@/lib/storage";
+import { POINTS, STORAGE_KEYS, awardOnce, awardPoints, incrementCounter, toggleInList } from "@/lib/storage";
 
 const SWIPE_THRESHOLD = 50;
 
@@ -40,9 +40,15 @@ export function StoryViewer({
     };
   }, []);
 
+  const [justSaved, setJustSaved] = useState(false);
+
   function toggleSave() {
     const nowSaved = toggleInList(STORAGE_KEYS.saved, item.id);
-    if (nowSaved) awardOnce(`save:${item.id}`, POINTS.save);
+    if (nowSaved) {
+      awardOnce(`save:${item.id}`, POINTS.save, "Sauvegardé");
+      setJustSaved(true);
+      setTimeout(() => setJustSaved(false), 400);
+    }
   }
   const touchStartX = useRef<number | null>(null);
   const touchDeltaX = useRef(0);
@@ -50,7 +56,7 @@ export function StoryViewer({
   function goTo(i: number) {
     const clamped = Math.max(0, Math.min(i, item.slides.length - 1));
     setIndex(clamped);
-    if (clamped > 0) awardOnce(`slide:${item.id}:${clamped}`, POINTS.advanceSlide);
+    if (clamped > 0) awardOnce(`slide:${item.id}:${clamped}`, POINTS.advanceSlide, "Story");
   }
 
   function onTouchStart(e: React.TouchEvent) {
@@ -77,19 +83,19 @@ export function StoryViewer({
       try {
         await navigator.share({ title: item.title, text, url: item.sourceUrl });
         incrementCounter(STORAGE_KEYS.shareCount);
-        addToCounter(STORAGE_KEYS.points, POINTS.share);
+        awardPoints(POINTS.share, "Partagé");
       } catch {
         // partage annulé par l'utilisateur
       }
     } else if (typeof navigator !== "undefined" && navigator.clipboard) {
       await navigator.clipboard.writeText(`${item.title}\n${item.sourceUrl}`);
       incrementCounter(STORAGE_KEYS.shareCount);
-      addToCounter(STORAGE_KEYS.points, POINTS.share);
+      awardPoints(POINTS.share, "Partagé");
     }
   }
 
   function onReadArticle() {
-    awardOnce(`readlink:${item.id}`, POINTS.readArticle);
+    awardOnce(`readlink:${item.id}`, POINTS.readArticle, "Lecture");
   }
 
   return (
@@ -118,7 +124,8 @@ export function StoryViewer({
             aria-label={saved ? "Retirer des sauvegardes" : "Sauvegarder"}
             className={clsx(
               "flex h-9 w-9 items-center justify-center rounded-full border transition-colors",
-              saved ? `border-transparent text-white ${style.solid}` : "border-border bg-surface text-foreground/70"
+              saved ? `border-transparent text-white ${style.solid}` : "border-border bg-surface text-foreground/70",
+              justSaved && "animate-pop"
             )}
           >
             <Bookmark size={16} strokeWidth={1.75} fill={saved ? "currentColor" : "none"} />

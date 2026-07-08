@@ -6,7 +6,7 @@ import {
   STORAGE_KEYS,
   computeStreak,
   getRank,
-  addToCounter,
+  awardPoints,
   incrementCounter,
   useStoredCounter,
   useStoredList,
@@ -55,14 +55,14 @@ export function ProfilClient({ items }: { items: FeedItem[] }) {
       try {
         await navigator.share({ title: "Mon récap corner", text });
         incrementCounter(STORAGE_KEYS.shareCount);
-        addToCounter(STORAGE_KEYS.points, 15);
+        awardPoints(15, "Partagé");
       } catch {
         // partage annulé
       }
     } else if (typeof navigator !== "undefined" && navigator.clipboard) {
       await navigator.clipboard.writeText(text);
       incrementCounter(STORAGE_KEYS.shareCount);
-      addToCounter(STORAGE_KEYS.points, 15);
+      awardPoints(15, "Partagé");
     }
   }
 
