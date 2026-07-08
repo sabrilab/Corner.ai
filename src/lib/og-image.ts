@@ -10,7 +10,7 @@ export async function fetchOgImage(url: string): Promise<string | undefined> {
   try {
     const res = await fetch(url, {
       signal: controller.signal,
-      next: { revalidate: 3600 },
+      next: { revalidate: 900 },
       headers: { "user-agent": "Mozilla/5.0 (compatible; cornerai-bot/1.0)" },
     });
     if (!res.ok) return undefined;

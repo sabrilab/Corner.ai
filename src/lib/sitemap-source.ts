@@ -55,7 +55,7 @@ async function fetchRecentSitemapUrls(
   try {
     const res = await fetch(sitemapUrl, {
       signal: controller.signal,
-      next: { revalidate: 3600 },
+      next: { revalidate: 900 },
       headers: { "user-agent": BROWSER_UA },
     });
     if (!res.ok) return [];

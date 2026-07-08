@@ -13,7 +13,7 @@ export async function fetchPageMeta(url: string, titleSuffixToStrip?: string): P
   try {
     const res = await fetch(url, {
       signal: controller.signal,
-      next: { revalidate: 3600 },
+      next: { revalidate: 900 },
       headers: { "user-agent": BROWSER_UA },
     });
     if (!res.ok) return null;

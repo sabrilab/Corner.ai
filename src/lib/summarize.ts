@@ -53,7 +53,7 @@ Réponds UNIQUEMENT avec un JSON valide, sans markdown ni texte autour, au forma
         max_tokens: 600,
         messages: [{ role: "user", content: prompt }],
       }),
-      next: { revalidate: 3600 },
+      next: { revalidate: 900 },
     });
     if (!res.ok) return null;
 

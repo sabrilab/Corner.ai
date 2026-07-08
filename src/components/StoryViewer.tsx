@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { X, Share2, ArrowUpRight, Bookmark } from "lucide-react";
+import { ArrowLeft, Share2, ArrowUpRight, Bookmark } from "lucide-react";
 import { clsx } from "clsx";
 import type { FeedItem } from "@/lib/types";
 import { feedCategoryStyles } from "@/lib/theme";
@@ -115,9 +115,18 @@ export function StoryViewer({
       </div>
 
       <div className="flex items-center justify-between px-4 py-3">
-        <span className={`rounded-full ${style.chip} px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide`}>
-          {style.label}
-        </span>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onClose}
+            aria-label="Retour au feed"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-surface text-foreground/70"
+          >
+            <ArrowLeft size={17} strokeWidth={2} />
+          </button>
+          <span className={`rounded-full ${style.chip} px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide`}>
+            {style.label}
+          </span>
+        </div>
         <div className="flex items-center gap-2">
           <button
             onClick={toggleSave}
@@ -136,13 +145,6 @@ export function StoryViewer({
             className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-surface text-foreground/70"
           >
             <Share2 size={16} strokeWidth={1.75} />
-          </button>
-          <button
-            onClick={onClose}
-            aria-label="Fermer"
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-surface text-foreground/70"
-          >
-            <X size={16} strokeWidth={1.75} />
           </button>
         </div>
       </div>

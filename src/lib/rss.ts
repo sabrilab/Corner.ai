@@ -21,7 +21,7 @@ export async function fetchRssItems(url: string, limit = 5): Promise<RssItem[]> 
   try {
     const res = await fetch(url, {
       signal: controller.signal,
-      next: { revalidate: 3600 },
+      next: { revalidate: 900 },
       headers: { "user-agent": BROWSER_UA },
     });
     if (!res.ok) return [];
