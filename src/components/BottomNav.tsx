@@ -20,18 +20,18 @@ export function BottomNav() {
 
   return (
     <nav
-      className="fixed inset-x-4 bottom-4 z-40 mx-auto max-w-[calc(32rem-2rem)]"
+      className="fixed inset-x-4 bottom-4 z-40 mx-auto max-w-[calc(32rem-2rem)] transform-gpu"
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
     >
-      <div className="relative flex items-center gap-1 overflow-hidden rounded-full border border-white/10 bg-black/55 p-1.5 shadow-[0_10px_40px_rgba(0,0,0,0.35)] backdrop-blur-2xl backdrop-saturate-150">
+      <div className="relative flex transform-gpu items-center gap-1 rounded-full border border-white/10 bg-black/85 p-1.5 shadow-[0_10px_40px_rgba(0,0,0,0.45)] backdrop-blur-xl">
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 h-1/2 rounded-t-full bg-gradient-to-b from-white/10 to-transparent"
+          className="pointer-events-none absolute inset-[1px] rounded-full bg-gradient-to-b from-white/[0.07] via-transparent to-transparent"
         />
 
         <div
           aria-hidden
-          className="absolute inset-y-1.5 w-[calc((100%-0.75rem)/3)] rounded-full border border-white/15 bg-white/12 shadow-[inset_0_1px_0_rgba(255,255,255,0.25)] backdrop-blur-md transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]"
+          className="absolute inset-y-1.5 left-1.5 w-[calc((100%-0.75rem)/3-0.125rem)] transform-gpu rounded-full bg-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]"
           style={{ transform: `translateX(${activeIndex * 100}%)` }}
         />
 
@@ -46,7 +46,7 @@ export function BottomNav() {
               <Icon
                 size={17}
                 strokeWidth={active ? 2.25 : 1.75}
-                className={clsx("transition-colors", active ? "text-white" : "text-white/45")}
+                className={clsx("transition-colors", active ? "text-white" : "text-white/40")}
               />
               <span
                 className={clsx(

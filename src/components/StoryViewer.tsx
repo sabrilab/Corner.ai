@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { X, Share2, ArrowUpRight, Bookmark } from "lucide-react";
 import { clsx } from "clsx";
 import type { FeedItem } from "@/lib/types";
@@ -20,6 +20,25 @@ export function StoryViewer({
 }) {
   const [index, setIndex] = useState(0);
   const style = feedCategoryStyles[item.category];
+
+  // Empêche le fond (le Feed) de défiler derrière l'overlay pendant que la story est ouverte.
+  useEffect(() => {
+    const scrollY = window.scrollY;
+    const body = document.body;
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.left = "0";
+    body.style.right = "0";
+    body.style.overflow = "hidden";
+    return () => {
+      body.style.position = "";
+      body.style.top = "";
+      body.style.left = "";
+      body.style.right = "";
+      body.style.overflow = "";
+      window.scrollTo(0, scrollY);
+    };
+  }, []);
 
   function toggleSave() {
     toggleInList(STORAGE_KEYS.saved, item.id);
@@ -126,7 +145,10 @@ export function StoryViewer({
           style={{ transform: `translateX(-${index * 100}%)` }}
         >
           {item.slides.map((slide, i) => (
-            <div key={i} className="flex h-full w-full shrink-0 flex-col justify-center gap-5 overflow-y-auto px-6 py-4">
+            <div
+              key={i}
+              className="flex h-full w-full shrink-0 flex-col justify-center gap-5 overflow-y-auto overscroll-contain px-6 py-4"
+            >
               <div className="mx-auto flex w-full max-w-md flex-col gap-4">
                 {i === 0 ? (
                   item.imageUrl ? (
