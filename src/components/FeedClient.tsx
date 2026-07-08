@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import { Flame } from "lucide-react";
 import { clsx } from "clsx";
 import { FeedCard } from "@/components/FeedCard";
@@ -91,10 +92,16 @@ export function FeedClient({ items }: { items: FeedItem[] }) {
 
       <div className="flex flex-col gap-3">
         {visibleItems.map((item, index) => (
-          <div
+          <motion.div
             key={item.id}
-            className="animate-card-in"
-            style={{ animationDelay: `${Math.min(index, 8) * 45}ms` }}
+            initial={{ opacity: 0, y: 12, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{
+              duration: 0.42,
+              delay: Math.min(index, 8) * 0.045,
+              ease: [0.16, 1, 0.3, 1],
+            }}
+            whileTap={{ scale: 0.98 }}
           >
             <FeedCard
               item={item}
@@ -102,7 +109,7 @@ export function FeedClient({ items }: { items: FeedItem[] }) {
               saved={savedIds.has(item.id)}
               onOpen={openStory}
             />
-          </div>
+          </motion.div>
         ))}
         {visibleItems.length === 0 ? (
           <p className="py-10 text-center text-[13px] text-foreground/40">
@@ -111,9 +118,11 @@ export function FeedClient({ items }: { items: FeedItem[] }) {
         ) : null}
       </div>
 
-      {openItem ? (
-        <StoryViewer item={openItem} saved={savedIds.has(openItem.id)} onClose={() => setOpenItem(null)} />
-      ) : null}
+      <AnimatePresence>
+        {openItem ? (
+          <StoryViewer item={openItem} saved={savedIds.has(openItem.id)} onClose={() => setOpenItem(null)} />
+        ) : null}
+      </AnimatePresence>
     </div>
   );
 }

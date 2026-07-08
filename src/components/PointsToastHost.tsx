@@ -1,55 +1,63 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
+import gsap from "gsap";
 import { Sparkles, Trophy } from "lucide-react";
-import { clsx } from "clsx";
 import { subscribeToast, type ToastPayload } from "@/lib/toast-bus";
 import { RANKS, STORAGE_KEYS, getRank, useStoredCounter } from "@/lib/storage";
 
 const LAST_CELEBRATED_RANK_KEY = "corner-ai:last-celebrated-rank";
 
 function Toast({ payload, onDone }: { payload: ToastPayload; onDone: () => void }) {
-  const [visible, setVisible] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const raf = requestAnimationFrame(() => setVisible(true));
     const hideDelay = payload.levelUp ? 2000 : 1200;
-    const removeDelay = payload.levelUp ? 2350 : 1550;
-    const hide = setTimeout(() => setVisible(false), hideDelay);
-    const remove = setTimeout(onDone, removeDelay);
-    return () => {
-      cancelAnimationFrame(raf);
-      clearTimeout(hide);
-      clearTimeout(remove);
-    };
+    const remove = setTimeout(onDone, hideDelay);
+
+    if (payload.levelUp && ref.current) {
+      gsap.fromTo(
+        ref.current,
+        { scale: 0.7, rotate: -6 },
+        { scale: 1, rotate: 0, duration: 0.7, ease: "elastic.out(1, 0.5)" }
+      );
+    }
+
+    return () => clearTimeout(remove);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (payload.levelUp) {
     return (
-      <div
-        className={clsx(
-          "flex items-center gap-2 rounded-full bg-gradient-to-r from-violet-600 via-fuchsia-600 to-pink-600 px-4 py-2.5 text-white shadow-lg transition-all duration-300 ease-out",
-          visible ? "translate-y-0 scale-100 opacity-100" : "-translate-y-3 scale-90 opacity-0"
-        )}
+      <motion.div
+        ref={ref}
+        layout
+        initial={{ opacity: 0, y: -12 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -12, scale: 0.9 }}
+        transition={{ type: "spring", stiffness: 400, damping: 28 }}
+        className="flex items-center gap-2 rounded-full bg-gradient-to-r from-violet-600 via-fuchsia-600 to-pink-600 px-4 py-2.5 text-white shadow-lg"
       >
         <Trophy size={16} strokeWidth={2.5} />
         <span className="text-[13px] font-bold">Nouveau rang · {payload.label}</span>
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <div
-      className={clsx(
-        "flex items-center gap-1.5 rounded-full bg-[#14151a] px-3.5 py-2 text-white shadow-lg transition-all duration-300 ease-out",
-        visible ? "translate-y-0 scale-100 opacity-100" : "-translate-y-3 scale-90 opacity-0"
-      )}
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: -12, scale: 0.9 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -12, scale: 0.9 }}
+      transition={{ type: "spring", stiffness: 500, damping: 32 }}
+      className="flex items-center gap-1.5 rounded-full bg-[#14151a] px-3.5 py-2 text-white shadow-lg"
     >
       <Sparkles size={13} className="text-violet-300" strokeWidth={2.5} />
       <span className="text-[13px] font-bold">+{payload.points}</span>
       {payload.label ? <span className="text-[12px] font-medium text-white/60">{payload.label}</span> : null}
-    </div>
+    </motion.div>
   );
 }
 
@@ -86,13 +94,13 @@ export function PointsToastHost() {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }
 
-  if (toasts.length === 0) return null;
-
   return (
     <div className="pointer-events-none fixed inset-x-0 top-[calc(env(safe-area-inset-top,0px)+4rem)] z-[60] flex flex-col items-center gap-2">
-      {toasts.map((t) => (
-        <Toast key={t.id} payload={t} onDone={() => remove(t.id)} />
-      ))}
+      <AnimatePresence>
+        {toasts.map((t) => (
+          <Toast key={t.id} payload={t} onDone={() => remove(t.id)} />
+        ))}
+      </AnimatePresence>
     </div>
   );
 }

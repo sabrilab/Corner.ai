@@ -44,7 +44,7 @@ export function FeedCard({
     <button
       onClick={() => onOpen(item)}
       className={clsx(
-        "relative flex w-full flex-col gap-3 rounded-3xl p-4 text-left transition-all active:scale-[0.98]",
+        "relative flex w-full flex-col gap-3 rounded-3xl p-4 text-left transition-[opacity,filter]",
         style.bg,
         read && "opacity-45 saturate-[0.35]"
       )}

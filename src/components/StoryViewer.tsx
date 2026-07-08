@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { motion } from "motion/react";
 import { ArrowLeft, Share2, ArrowUpRight, Bookmark } from "lucide-react";
 import { clsx } from "clsx";
 import type { FeedItem } from "@/lib/types";
@@ -99,7 +100,13 @@ export function StoryViewer({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-background">
+    <motion.div
+      className="fixed inset-0 z-50 flex flex-col bg-background"
+      initial={{ opacity: 0, y: 28 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 28 }}
+      transition={{ type: "spring", stiffness: 420, damping: 38 }}
+    >
       <div className="flex gap-1.5 px-4 pt-[calc(env(safe-area-inset-top,0px)+12px)]">
         {item.slides.map((_, i) => (
           <button
@@ -116,13 +123,14 @@ export function StoryViewer({
 
       <div className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-2">
-          <button
+          <motion.button
+            whileTap={{ scale: 0.88 }}
             onClick={onClose}
             aria-label="Retour au feed"
             className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-surface text-foreground/70"
           >
             <ArrowLeft size={17} strokeWidth={2} />
-          </button>
+          </motion.button>
           <span className={`rounded-full ${style.chip} px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide`}>
             {style.label}
           </span>
@@ -158,9 +166,10 @@ export function StoryViewer({
         <button onClick={() => goTo(index - 1)} aria-label="Précédent" className="absolute left-0 top-0 z-10 h-full w-1/5" />
         <button onClick={() => goTo(index + 1)} aria-label="Suivant" className="absolute right-0 top-0 z-10 h-full w-1/5" />
 
-        <div
-          className="flex h-full transition-transform duration-300 ease-out"
-          style={{ transform: `translateX(-${index * 100}%)` }}
+        <motion.div
+          className="flex h-full"
+          animate={{ x: `-${index * 100}%` }}
+          transition={{ type: "spring", stiffness: 380, damping: 38 }}
         >
           {item.slides.map((slide, i) => (
             <div
@@ -210,7 +219,7 @@ export function StoryViewer({
               </div>
             </div>
           ))}
-        </div>
+        </motion.div>
       </div>
 
       <div className="flex items-center justify-center px-6 pb-[calc(env(safe-area-inset-bottom,0px)+20px)] pt-2">
@@ -218,6 +227,6 @@ export function StoryViewer({
           {index + 1} / {item.slides.length} · glisse pour naviguer
         </span>
       </div>
-    </div>
+    </motion.div>
   );
 }

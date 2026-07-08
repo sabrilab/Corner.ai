@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { motion } from "motion/react";
 import { Newspaper, Trophy, Sparkles } from "lucide-react";
 import { clsx } from "clsx";
 
@@ -29,33 +30,36 @@ export function BottomNav() {
           className="pointer-events-none absolute inset-[1px] rounded-full bg-gradient-to-b from-white/[0.07] via-transparent to-transparent"
         />
 
-        <div
-          aria-hidden
-          className="absolute inset-y-1.5 left-1.5 w-[calc((100%-0.75rem)/3-0.125rem)] transform-gpu rounded-full bg-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]"
-          style={{ transform: `translateX(${activeIndex * 100}%)` }}
-        />
-
         {TABS.map(({ href, label, icon: Icon }, i) => {
           const active = i === activeIndex;
           return (
             <Link
               key={href}
               href={href}
-              className="relative z-10 flex flex-1 items-center justify-center gap-1.5 rounded-full py-2.5 transition-colors"
+              className="relative z-10 flex flex-1 items-center justify-center gap-1.5 rounded-full py-2.5"
             >
-              <Icon
-                size={17}
-                strokeWidth={active ? 2.25 : 1.75}
-                className={clsx("transition-colors", active ? "text-white" : "text-white/40")}
-              />
-              <span
-                className={clsx(
-                  "overflow-hidden whitespace-nowrap text-[11px] font-semibold tracking-tight text-white transition-all duration-300",
-                  active ? "max-w-[5rem] opacity-100" : "max-w-0 opacity-0"
-                )}
-              >
-                {label}
-              </span>
+              {active ? (
+                <motion.div
+                  layoutId="bottom-nav-indicator"
+                  className="absolute inset-0 rounded-full bg-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]"
+                  transition={{ type: "spring", stiffness: 500, damping: 34 }}
+                />
+              ) : null}
+              <motion.span whileTap={{ scale: 0.88 }} className="relative z-10 flex items-center gap-1.5">
+                <Icon
+                  size={17}
+                  strokeWidth={active ? 2.25 : 1.75}
+                  className={clsx("transition-colors", active ? "text-white" : "text-white/40")}
+                />
+                <span
+                  className={clsx(
+                    "overflow-hidden whitespace-nowrap text-[11px] font-semibold tracking-tight text-white transition-all duration-300",
+                    active ? "max-w-[5rem] opacity-100" : "max-w-0 opacity-0"
+                  )}
+                >
+                  {label}
+                </span>
+              </motion.span>
             </Link>
           );
         })}
