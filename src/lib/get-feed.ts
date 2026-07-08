@@ -1,6 +1,7 @@
 import { feedSources } from "./feed-sources";
 import { fetchRssItems, type RssItem } from "./rss";
 import { fetchOgImage } from "./og-image";
+import { fetchAnthropicNews } from "./anthropic-blog";
 import { summarizeInFrench } from "./summarize";
 import { feedItems as fallbackItems } from "./mock-data";
 import type { FeedItem } from "./types";
@@ -12,6 +13,11 @@ const MAX_SUMMARIES = 12;
 const AI_KEYWORDS =
   /(\bAI\b|\bIA\b|artificial intelligence|intelligence artificielle|OpenAI|Anthropic|Claude|GPT|Gemini|DeepMind|xAI|Grok|LLM|modèle|model|agent|machine learning|neural)/i;
 
+// Ces trois blogs officiels ne doivent jamais être évincés du Feed par des sources secondaires
+// (presse, tweets...) même si celles-ci sont chronologiquement plus récentes.
+const PRIORITY_SOURCES = new Set(["OpenAI", "Google DeepMind", "Anthropic"]);
+const PRIORITY_RESERVED_SLOTS = 6;
+
 interface SourcedItem extends RssItem {
   sourceName: string;
   category: FeedItem["category"];
@@ -20,27 +26,40 @@ interface SourcedItem extends RssItem {
 }
 
 export async function getFeedItems(): Promise<FeedItem[]> {
-  const bySources = await Promise.allSettled(
-    feedSources.map(async (source) => {
-      const items = await fetchRssItems(source.url, 4);
-      return items
-        .map<SourcedItem>((item) => ({
-          ...item,
-          sourceName: source.name,
-          category: source.category,
-          skipImage: source.skipImage,
-          filterKeywords: source.filterKeywords,
-        }))
-        .filter((item) => !item.filterKeywords || AI_KEYWORDS.test(`${item.title} ${item.summary}`));
-    })
-  );
+  const [bySources, anthropicItems] = await Promise.all([
+    Promise.allSettled(
+      feedSources.map(async (source) => {
+        const items = await fetchRssItems(source.url, 4);
+        return items
+          .map<SourcedItem>((item) => ({
+            ...item,
+            sourceName: source.name,
+            category: source.category,
+            skipImage: source.skipImage,
+            filterKeywords: source.filterKeywords,
+          }))
+          .filter((item) => !item.filterKeywords || AI_KEYWORDS.test(`${item.title} ${item.summary}`));
+      })
+    ),
+    // Pas de flux RSS officiel chez Anthropic : source dédiée basée sur leur sitemap.
+    fetchAnthropicNews(4).catch(() => [] as RssItem[]),
+  ]);
 
-  const merged = dedupeByTitle(
+  const anthropicSourced: SourcedItem[] = anthropicItems.map((item) => ({
+    ...item,
+    sourceName: "Anthropic",
+    category: "release",
+  }));
+
+  const deduped = dedupeByTitle(
     bySources
       .filter((r): r is PromiseFulfilledResult<SourcedItem[]> => r.status === "fulfilled")
       .flatMap((r) => r.value)
+      .concat(anthropicSourced)
       .sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime())
-  ).slice(0, MAX_ITEMS);
+  );
+
+  const merged = reservePrioritySlots(deduped);
 
   if (merged.length === 0) return fallbackItems;
 
@@ -133,6 +152,16 @@ function normalizeTitle(title: string): string {
     .replace(/[^a-z0-9]+/g, " ")
     .trim()
     .slice(0, 60);
+}
+
+function reservePrioritySlots(items: SourcedItem[]): SourcedItem[] {
+  const priority = items.filter((i) => PRIORITY_SOURCES.has(i.sourceName)).slice(0, PRIORITY_RESERVED_SLOTS);
+  const priorityLinks = new Set(priority.map((i) => i.link));
+  const rest = items.filter((i) => !priorityLinks.has(i.link));
+  const remainingSlots = Math.max(0, MAX_ITEMS - priority.length);
+  const combined = [...priority, ...rest.slice(0, remainingSlots)];
+  combined.sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime());
+  return combined;
 }
 
 function dedupeByTitle(items: SourcedItem[]): SourcedItem[] {

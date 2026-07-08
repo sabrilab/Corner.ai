@@ -184,10 +184,10 @@ export function StoryViewer({
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={onReadArticle}
-                    className="mt-2 flex w-fit items-center gap-1.5 rounded-full bg-[#14151a] px-4 py-2.5 text-[13px] font-bold text-white"
+                    className="mt-3 flex w-fit items-center gap-1 text-[12px] font-medium text-foreground/35 underline decoration-foreground/20 underline-offset-2"
                   >
-                    Lire l&apos;article
-                    <ArrowUpRight size={15} strokeWidth={2.5} />
+                    Voir la source
+                    <ArrowUpRight size={11} strokeWidth={2} />
                   </a>
                 ) : (
                   <button
