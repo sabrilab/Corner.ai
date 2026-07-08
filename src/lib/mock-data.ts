@@ -1,11 +1,13 @@
 import type { FeedItem, ModelEntry } from "./types";
 
+// Filet de sécurité si les flux RSS en direct (voir get-feed.ts) sont indisponibles.
 export const feedItems: FeedItem[] = [
   {
     id: "f1",
     category: "release",
     title: "Nouvelle génération de modèle multimodal",
     source: "Lab officiel",
+    sourceUrl: "https://openai.com/news",
     publishedAt: "il y a 2h",
     summary:
       "Fenêtre de contexte élargie, latence réduite et meilleure tenue sur les tâches de raisonnement long.",
@@ -14,21 +16,20 @@ export const feedItems: FeedItem[] = [
     slides: [
       { title: "Ce qui change", body: "Contexte étendu et coûts par token en baisse par rapport à la génération précédente." },
       { title: "Pourquoi ça compte", body: "Les tâches d'agent longue durée deviennent praticables sans découpage manuel du contexte." },
-      { title: "À surveiller", body: "Les benchmarks indépendants doivent encore confirmer les chiffres annoncés par le lab." },
     ],
   },
   {
     id: "f2",
-    category: "content",
-    title: "Démos vidéo générées impressionnantes",
-    source: "Studio créatif",
+    category: "update",
+    title: "Mise à jour silencieuse d'un modèle très utilisé",
+    source: "Changelog officiel",
+    sourceUrl: "https://huggingface.co/blog",
     publishedAt: "il y a 4h",
-    summary: "Cohérence temporelle nettement améliorée sur les plans de plus de 10 secondes.",
-    modelTag: "Vidéo",
-    mediaKind: "video",
+    summary: "Amélioration du suivi d'instructions complexes, coût inchangé.",
+    modelTag: "Texte",
+    mediaKind: "none",
     slides: [
-      { title: "Le rendu", body: "Mouvements de caméra fluides, moins d'artefacts sur les visages en mouvement." },
-      { title: "Cas d'usage", body: "Storyboards rapides, prévisualisation de pubs, contenus courts pour réseaux sociaux." },
+      { title: "Le changement", body: "Meilleure adhérence aux formats de sortie demandés (JSON, tableaux, structure imposée)." },
     ],
   },
   {
@@ -36,41 +37,12 @@ export const feedItems: FeedItem[] = [
     category: "paper",
     title: "Papier de recherche sur le raisonnement en chaîne courte",
     source: "Arxiv",
+    sourceUrl: "https://arxiv.org",
     publishedAt: "il y a 6h",
     summary: "Une méthode d'entraînement qui réduit le nombre de tokens de raisonnement sans perte de précision.",
     mediaKind: "none",
     slides: [
       { title: "L'idée clé", body: "Récompenser la concision du raisonnement pendant le fine-tuning par renforcement." },
-      { title: "Résultats", body: "-40% de tokens de réflexion pour une précision quasi identique sur les benchmarks de maths." },
-      { title: "Limites", body: "Testé principalement sur des tâches fermées, généralisation à confirmer." },
-    ],
-  },
-  {
-    id: "f4",
-    category: "benchmark",
-    title: "Un nouveau modèle grimpe dans les classements de code",
-    source: "Leaderboard communautaire",
-    publishedAt: "il y a 8h",
-    summary: "Progression notable sur les tâches de correction de bugs en conditions réelles.",
-    modelTag: "Code",
-    mediaKind: "none",
-    slides: [
-      { title: "Le classement", body: "Passe de la 5e à la 2e place sur les tâches de résolution d'issues GitHub." },
-      { title: "Nuance", body: "Le gain est surtout marqué sur les langages populaires, moins sur les stacks de niche." },
-    ],
-  },
-  {
-    id: "f5",
-    category: "update",
-    title: "Mise à jour silencieuse d'un modèle très utilisé",
-    source: "Changelog officiel",
-    publishedAt: "il y a 12h",
-    summary: "Amélioration du suivi d'instructions complexes, coût inchangé.",
-    modelTag: "Texte",
-    mediaKind: "none",
-    slides: [
-      { title: "Le changement", body: "Meilleure adhérence aux formats de sortie demandés (JSON, tableaux, structure imposée)." },
-      { title: "Impact", body: "Moins de retries nécessaires côté produit pour les intégrations qui parsent la sortie." },
     ],
   },
 ];

@@ -15,28 +15,35 @@ export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-black/80 backdrop-blur-md">
-      <div
-        className="mx-auto flex max-w-lg items-stretch justify-around px-2 pt-1"
-        style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 4px)" }}
-      >
+    <nav
+      className="fixed inset-x-4 bottom-4 z-40 mx-auto max-w-[calc(32rem-2rem)] rounded-full bg-[#14151a] shadow-[0_8px_30px_rgba(20,21,26,0.25)]"
+      style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+    >
+      <div className="flex items-stretch justify-around px-2 py-2">
         {TABS.map(({ href, label, icon: Icon }) => {
           const active = pathname === href || pathname.startsWith(`${href}/`);
           return (
             <Link
               key={href}
               href={href}
-              className="flex flex-1 flex-col items-center gap-1 rounded-lg py-2 transition-colors"
+              className="flex flex-1 flex-col items-center gap-1 rounded-full py-2 transition-colors"
             >
-              <Icon
-                size={20}
-                strokeWidth={active ? 2.25 : 1.75}
-                className={clsx(active ? "text-white" : "text-zinc-500")}
-              />
               <span
                 className={clsx(
-                  "text-[11px] font-medium tracking-tight",
-                  active ? "text-white" : "text-zinc-500"
+                  "flex h-8 w-8 items-center justify-center rounded-full transition-colors",
+                  active ? "bg-white" : "bg-transparent"
+                )}
+              >
+                <Icon
+                  size={18}
+                  strokeWidth={active ? 2.25 : 1.75}
+                  className={active ? "text-[#14151a]" : "text-white/50"}
+                />
+              </span>
+              <span
+                className={clsx(
+                  "text-[10px] font-semibold tracking-tight",
+                  active ? "text-white" : "text-white/40"
                 )}
               >
                 {label}

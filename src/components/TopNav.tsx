@@ -9,13 +9,13 @@ export function TopNav() {
   const isFeed = pathname === "/feed" || pathname.startsWith("/feed/");
 
   return (
-    <header className="fixed inset-x-0 top-0 z-40 border-b border-border bg-black/80 backdrop-blur-md">
+    <header className="fixed inset-x-0 top-0 z-40 border-b border-border bg-background/90 backdrop-blur-md">
       <div className="mx-auto flex h-14 max-w-lg items-center justify-between px-4">
-        <Link href="/feed" className="flex items-baseline gap-1">
-          <span className="text-[18px] font-bold tracking-tight text-white">
+        <Link href="/feed" className="flex items-baseline gap-0.5">
+          <span className="text-[19px] font-extrabold tracking-tight text-foreground">
             corner
           </span>
-          <span className="text-[12px] font-medium tracking-tight text-zinc-500">
+          <span className="text-[13px] font-bold tracking-tight text-violet-500">
             .ai
           </span>
         </Link>
@@ -24,9 +24,9 @@ export function TopNav() {
           <Link
             href="/feed/profil"
             aria-label="Profil"
-            className="flex h-8 w-8 items-center justify-center rounded-full border border-border text-zinc-300 transition-colors hover:border-zinc-600 hover:text-white"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-surface text-foreground/70 transition-colors active:bg-black/5"
           >
-            <CircleUserRound size={18} strokeWidth={1.75} />
+            <CircleUserRound size={19} strokeWidth={1.75} />
           </Link>
         ) : null}
       </div>

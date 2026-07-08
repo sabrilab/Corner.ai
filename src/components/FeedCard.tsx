@@ -1,18 +1,15 @@
 "use client";
 
-import { Image as ImageIcon, Video, FlaskConical, TrendingUp, RefreshCw } from "lucide-react";
-import { clsx } from "clsx";
+import { Image as ImageIcon, FlaskConical, TrendingUp, RefreshCw, ArrowUpRight } from "lucide-react";
 import type { FeedItem } from "@/lib/types";
+import { feedCategoryStyles } from "@/lib/theme";
 
-const CATEGORY_META: Record<
-  FeedItem["category"],
-  { label: string; icon: typeof FlaskConical }
-> = {
-  release: { label: "Sortie", icon: TrendingUp },
-  paper: { label: "Recherche", icon: FlaskConical },
-  update: { label: "Mise à jour", icon: RefreshCw },
-  benchmark: { label: "Classement", icon: TrendingUp },
-  content: { label: "Contenu généré", icon: ImageIcon },
+const CATEGORY_ICON: Record<FeedItem["category"], typeof FlaskConical> = {
+  release: TrendingUp,
+  paper: FlaskConical,
+  update: RefreshCw,
+  benchmark: TrendingUp,
+  content: ImageIcon,
 };
 
 export function FeedCard({
@@ -22,45 +19,42 @@ export function FeedCard({
   item: FeedItem;
   onOpen: (item: FeedItem) => void;
 }) {
-  const meta = CATEGORY_META[item.category];
-  const Icon = meta.icon;
+  const style = feedCategoryStyles[item.category];
+  const Icon = CATEGORY_ICON[item.category];
 
   return (
     <button
       onClick={() => onOpen(item)}
-      className="flex w-full flex-col gap-3 rounded-xl border border-border bg-surface p-4 text-left transition-colors active:bg-zinc-900"
+      className={`relative flex w-full flex-col gap-3 rounded-3xl ${style.bg} p-4 text-left transition-transform active:scale-[0.98]`}
     >
-      {item.mediaKind !== "none" ? (
-        <div className="flex h-32 w-full items-center justify-center rounded-lg bg-gradient-to-br from-zinc-800 to-zinc-950">
-          {item.mediaKind === "video" ? (
-            <Video size={22} className="text-zinc-500" strokeWidth={1.5} />
-          ) : (
-            <ImageIcon size={22} className="text-zinc-500" strokeWidth={1.5} />
-          )}
-        </div>
+      <span className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-[#14151a] text-white">
+        <ArrowUpRight size={16} strokeWidth={2} />
+      </span>
+
+      {item.imageUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={item.imageUrl}
+          alt=""
+          loading="lazy"
+          className="h-36 w-full rounded-2xl object-cover"
+        />
       ) : null}
 
-      <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-wide text-zinc-500">
-        <Icon size={12} strokeWidth={2} />
-        <span>{meta.label}</span>
-        {item.modelTag ? (
-          <span
-            className={clsx(
-              "rounded-full border border-border px-2 py-0.5 text-zinc-400"
-            )}
-          >
-            {item.modelTag}
-          </span>
-        ) : null}
+      <div className="flex items-center gap-2 pr-10 text-[11px] font-bold uppercase tracking-wide">
+        <span className={`flex items-center gap-1 rounded-full ${style.chip} px-2.5 py-1`}>
+          <Icon size={11} strokeWidth={2.5} />
+          {style.label}
+        </span>
       </div>
 
-      <h3 className="text-[15px] font-semibold leading-snug tracking-tight text-white">
+      <h3 className={`max-w-[85%] text-[16px] font-extrabold leading-snug tracking-tight ${style.text}`}>
         {item.title}
       </h3>
-      <p className="line-clamp-2 text-[13px] leading-relaxed text-zinc-400">
+      <p className={`line-clamp-2 text-[13px] leading-relaxed ${style.text} opacity-70`}>
         {item.summary}
       </p>
-      <div className="text-[11px] text-zinc-600">
+      <div className={`text-[11px] font-medium ${style.text} opacity-50`}>
         {item.source} · {item.publishedAt}
       </div>
     </button>

@@ -10,10 +10,12 @@ export interface FeedItem {
   category: FeedCategory;
   title: string;
   source: string;
+  sourceUrl: string;
   publishedAt: string;
   summary: string;
   modelTag?: string;
   mediaKind: "image" | "video" | "none";
+  imageUrl?: string;
   slides: FeedSlide[];
 }
 

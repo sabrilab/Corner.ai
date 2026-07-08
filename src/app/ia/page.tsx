@@ -75,8 +75,10 @@ export default function IaPage() {
   return (
     <div className="flex h-[calc(100dvh-9.75rem)] flex-col">
       <div className="flex items-center gap-2 pb-3">
-        <Sparkles size={16} className="text-white" strokeWidth={2} />
-        <h1 className="text-lg font-bold tracking-tight text-white">
+        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-violet-100">
+          <Sparkles size={14} className="text-violet-600" strokeWidth={2.25} />
+        </span>
+        <h1 className="text-lg font-extrabold tracking-tight text-foreground">
           Conseiller IA
         </h1>
       </div>
@@ -87,18 +89,18 @@ export default function IaPage() {
             key={m.id}
             className={
               m.role === "user"
-                ? "ml-auto max-w-[85%] rounded-2xl rounded-br-md bg-white px-4 py-2.5 text-[14px] leading-relaxed text-black"
-                : "mr-auto max-w-[85%] rounded-2xl rounded-bl-md border border-border bg-surface px-4 py-2.5 text-[14px] leading-relaxed text-zinc-200"
+                ? "ml-auto max-w-[85%] rounded-2xl rounded-br-md bg-[#14151a] px-4 py-2.5 text-[14px] leading-relaxed text-white"
+                : "mr-auto max-w-[85%] rounded-2xl rounded-bl-md bg-violet-100 px-4 py-2.5 text-[14px] leading-relaxed text-violet-950"
             }
           >
             {m.content}
           </div>
         ))}
         {pending ? (
-          <div className="mr-auto flex items-center gap-1 rounded-2xl rounded-bl-md border border-border bg-surface px-4 py-2.5">
-            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-zinc-500 [animation-delay:-0.2s]" />
-            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-zinc-500 [animation-delay:-0.1s]" />
-            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-zinc-500" />
+          <div className="mr-auto flex items-center gap-1 rounded-2xl rounded-bl-md bg-violet-100 px-4 py-2.5">
+            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-violet-400 [animation-delay:-0.2s]" />
+            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-violet-400 [animation-delay:-0.1s]" />
+            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-violet-400" />
           </div>
         ) : null}
 
@@ -108,7 +110,7 @@ export default function IaPage() {
               <button
                 key={s}
                 onClick={() => send(s)}
-                className="rounded-xl border border-border px-3.5 py-2 text-left text-[13px] text-zinc-400 transition-colors active:bg-zinc-900"
+                className="rounded-xl border border-border bg-surface px-3.5 py-2 text-left text-[13px] font-medium text-foreground/60 transition-colors active:bg-black/5"
               >
                 {s}
               </button>
@@ -128,13 +130,13 @@ export default function IaPage() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Décris ton projet…"
-          className="flex-1 bg-transparent px-2 text-[14px] text-white placeholder:text-zinc-600 focus:outline-none"
+          className="flex-1 bg-transparent px-2 text-[14px] text-foreground placeholder:text-foreground/35 focus:outline-none"
         />
         <button
           type="submit"
           disabled={!input.trim() || pending}
           aria-label="Envoyer"
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-black disabled:opacity-30"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#14151a] text-white disabled:opacity-30"
         >
           <ArrowUp size={16} strokeWidth={2.5} />
         </button>
