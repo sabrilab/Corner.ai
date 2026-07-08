@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { getRank } from "@/lib/storage";
 
-const RING_SIZE = 84;
-const STROKE = 4;
+const RING_SIZE = 60;
+const STROKE = 3;
 const RADIUS = (RING_SIZE - STROKE) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
@@ -13,8 +13,18 @@ export function FeedHeader({ points }: { points: number }) {
   const offset = CIRCUMFERENCE * (1 - progress);
 
   return (
-    <div className="flex flex-col items-center gap-3 pb-1 pt-3">
-      <Link href="/feed/profil" className="relative flex items-center justify-center">
+    <div className="flex items-center justify-between gap-3 pb-1 pt-3">
+      <div className="flex flex-col items-start gap-1.5 text-left">
+        <h2 className="text-lg font-extrabold tracking-tight text-foreground">Bienvenue Sabri</h2>
+        <div className="flex items-center gap-2">
+          <span className="rounded-full bg-[#14151a] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
+            {rank.name}
+          </span>
+          <span className="text-[12px] font-semibold text-foreground/50">{points} pts</span>
+        </div>
+      </div>
+
+      <Link href="/feed/profil" className="relative flex shrink-0 items-center justify-center">
         <svg width={RING_SIZE} height={RING_SIZE} className="-rotate-90">
           <circle
             cx={RING_SIZE / 2}
@@ -44,17 +54,10 @@ export function FeedHeader({ points }: { points: number }) {
             </linearGradient>
           </defs>
         </svg>
-        <div className="absolute flex h-14 w-14 items-center justify-center rounded-full bg-violet-200 text-xl font-extrabold text-violet-950">
+        <div className="absolute flex h-10 w-10 items-center justify-center rounded-full bg-violet-200 text-[15px] font-extrabold text-violet-950">
           S
         </div>
       </Link>
-
-      <div className="flex items-center gap-2">
-        <span className="rounded-full bg-[#14151a] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
-          {rank.name}
-        </span>
-        <span className="text-[12px] font-semibold text-foreground/50">{points} pts</span>
-      </div>
     </div>
   );
 }
