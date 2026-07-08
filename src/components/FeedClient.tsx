@@ -1,50 +1,42 @@
 "use client";
 
-import { useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 import { Flame } from "lucide-react";
+import { clsx } from "clsx";
 import { FeedCard } from "@/components/FeedCard";
 import { StoryViewer } from "@/components/StoryViewer";
-import type { FeedItem } from "@/lib/types";
+import type { FeedCategory, FeedItem } from "@/lib/types";
+import { feedCategoryStyles } from "@/lib/theme";
+import { STORAGE_KEYS, addUnique, computeStreak, useStoredList, useStoredSet } from "@/lib/storage";
 
-const READ_STORAGE_KEY = "corner-ai:read-items";
-const LOCAL_EVENT = "corner-ai:read-items-changed";
-
-function subscribe(callback: () => void) {
-  window.addEventListener("storage", callback);
-  window.addEventListener(LOCAL_EVENT, callback);
-  return () => {
-    window.removeEventListener("storage", callback);
-    window.removeEventListener(LOCAL_EVENT, callback);
-  };
-}
-
-function getSnapshot(): string {
-  return window.localStorage.getItem(READ_STORAGE_KEY) ?? "[]";
-}
-
-function getServerSnapshot(): string {
-  return "[]";
-}
-
-function markRead(id: string) {
-  const ids: string[] = JSON.parse(window.localStorage.getItem(READ_STORAGE_KEY) ?? "[]");
-  if (!ids.includes(id)) {
-    window.localStorage.setItem(READ_STORAGE_KEY, JSON.stringify([...ids, id]));
-    window.dispatchEvent(new Event(LOCAL_EVENT));
-  }
-}
+const FILTERS: { label: string; value: FeedCategory | "tous" }[] = [
+  { label: "Tous", value: "tous" },
+  { label: "Sorties", value: "release" },
+  { label: "Recherche", value: "paper" },
+  { label: "Mises à jour", value: "update" },
+  { label: "Dirigeants", value: "moves" },
+  { label: "Classements", value: "benchmark" },
+];
 
 export function FeedClient({ items }: { items: FeedItem[] }) {
   const [openItem, setOpenItem] = useState<FeedItem | null>(null);
-  const readIdsRaw = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
-  const readIds = useMemo(() => new Set<string>(JSON.parse(readIdsRaw)), [readIdsRaw]);
+  const [filter, setFilter] = useState<FeedCategory | "tous">("tous");
+  const readIds = useStoredSet(STORAGE_KEYS.read);
+  const savedIds = useStoredSet(STORAGE_KEYS.saved);
+  const visits = useStoredList(STORAGE_KEYS.visits);
+  const streak = computeStreak(visits);
+
+  useEffect(() => {
+    addUnique(STORAGE_KEYS.visits, new Date().toISOString().slice(0, 10));
+  }, []);
 
   function openStory(item: FeedItem) {
     setOpenItem(item);
-    markRead(item.id);
+    addUnique(STORAGE_KEYS.read, item.id);
   }
 
-  const unreadCount = items.filter((item) => !readIds.has(item.id)).length;
+  const visibleItems = filter === "tous" ? items : items.filter((i) => i.category === filter);
+  const unreadCount = visibleItems.filter((item) => !readIds.has(item.id)).length;
 
   return (
     <div className="flex flex-col gap-4 pb-4">
@@ -59,17 +51,49 @@ export function FeedClient({ items }: { items: FeedItem[] }) {
         </div>
         <div className="flex items-center gap-1.5 rounded-full bg-orange-200 px-3 py-1.5 text-[13px] font-bold text-orange-950">
           <Flame size={14} className="text-orange-600" strokeWidth={2} />
-          <span>7</span>
+          <span>{streak}</span>
         </div>
       </div>
 
-      <div className="flex flex-col gap-3">
-        {items.map((item) => (
-          <FeedCard key={item.id} item={item} read={readIds.has(item.id)} onOpen={openStory} />
-        ))}
+      <div className="-mx-4 flex gap-2 overflow-x-auto px-4">
+        {FILTERS.map(({ label, value }) => {
+          const active = filter === value;
+          const solid = value !== "tous" ? feedCategoryStyles[value].chip.split(" ")[0] : "bg-[#14151a]";
+          return (
+            <button
+              key={value}
+              onClick={() => setFilter(value)}
+              className={clsx(
+                "shrink-0 rounded-full border px-3.5 py-1.5 text-[13px] font-bold transition-colors",
+                active ? `border-transparent text-white ${solid}` : "border-border text-foreground/50"
+              )}
+            >
+              {label}
+            </button>
+          );
+        })}
       </div>
 
-      {openItem ? <StoryViewer item={openItem} onClose={() => setOpenItem(null)} /> : null}
+      <div className="flex flex-col gap-3">
+        {visibleItems.map((item) => (
+          <FeedCard
+            key={item.id}
+            item={item}
+            read={readIds.has(item.id)}
+            saved={savedIds.has(item.id)}
+            onOpen={openStory}
+          />
+        ))}
+        {visibleItems.length === 0 ? (
+          <p className="py-10 text-center text-[13px] text-foreground/40">
+            Rien dans cette catégorie pour l&apos;instant.
+          </p>
+        ) : null}
+      </div>
+
+      {openItem ? (
+        <StoryViewer item={openItem} saved={savedIds.has(openItem.id)} onClose={() => setOpenItem(null)} />
+      ) : null}
     </div>
   );
 }

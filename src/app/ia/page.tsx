@@ -2,38 +2,13 @@
 
 import { useRef, useState } from "react";
 import { ArrowUp, Sparkles } from "lucide-react";
-import { modelEntries } from "@/lib/mock-data";
-import type { ChatMessage, ModelCategory } from "@/lib/types";
+import type { ChatMessage } from "@/lib/types";
 
 const SUGGESTIONS = [
   "Je veux générer des vidéos pour Instagram",
   "Quel modèle pour coder une app mobile ?",
   "Je cherche le meilleur rapport qualité/prix en texte",
 ];
-
-function detectCategory(text: string): ModelCategory | null {
-  const t = text.toLowerCase();
-  if (/(vid[eé]o|film|clip|animation)/.test(t)) return "video";
-  if (/(image|photo|illustration|logo|visuel)/.test(t)) return "image";
-  if (/(code|d[eé]velopp|app|bug|programm)/.test(t)) return "code";
-  if (/(voix|audio|podcast|musique|voice)/.test(t)) return "audio";
-  if (/(texte|r[eé]diger|copywriting|chat|agent)/.test(t)) return "texte";
-  return null;
-}
-
-function recommend(text: string): string {
-  const category = detectCategory(text);
-  const candidates = category
-    ? modelEntries.filter((m) => m.category === category)
-    : modelEntries;
-  const best = [...candidates].sort((a, b) => b.score - a.score)[0];
-
-  if (!best) {
-    return "Décris un peu plus ton projet (texte, image, vidéo, audio, code) pour que je puisse te conseiller un modèle précis.";
-  }
-
-  return `Pour ce type de projet, je te recommande **${best.name}** (${best.lab}), le mieux noté actuellement sur cette catégorie avec un score agrégé de ${best.score}/100. Points forts : ${best.strengths.join(", ")}. Tu peux voir sa fiche complète dans l'onglet Classement.`;
-}
 
 export default function IaPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -48,7 +23,7 @@ export default function IaPage() {
   const [pending, setPending] = useState(false);
   const idCounter = useRef(0);
 
-  function send(text: string) {
+  async function send(text: string) {
     if (!text.trim() || pending) return;
     idCounter.current += 1;
     const userMsg: ChatMessage = {
@@ -56,20 +31,39 @@ export default function IaPage() {
       role: "user",
       content: text.trim(),
     };
+    const history = messages
+      .filter((m) => m.id !== "greeting")
+      .map((m) => ({ role: m.role, content: m.content }));
+
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
     setPending(true);
 
-    setTimeout(() => {
+    try {
+      const res = await fetch("/api/advise", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ message: text, history }),
+      });
+      const data = await res.json();
       idCounter.current += 1;
-      const assistantMsg: ChatMessage = {
-        id: `a-${idCounter.current}`,
-        role: "assistant",
-        content: recommend(text),
-      };
-      setMessages((prev) => [...prev, assistantMsg]);
+      setMessages((prev) => [
+        ...prev,
+        { id: `a-${idCounter.current}`, role: "assistant", content: data.reply },
+      ]);
+    } catch {
+      idCounter.current += 1;
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `a-${idCounter.current}`,
+          role: "assistant",
+          content: "Petit souci de connexion, réessaie dans un instant.",
+        },
+      ]);
+    } finally {
       setPending(false);
-    }, 500);
+    }
   }
 
   return (

@@ -1,22 +1,29 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { X, Share2, ArrowUpRight } from "lucide-react";
+import { X, Share2, ArrowUpRight, Bookmark } from "lucide-react";
 import { clsx } from "clsx";
 import type { FeedItem } from "@/lib/types";
 import { feedCategoryStyles } from "@/lib/theme";
+import { STORAGE_KEYS, incrementCounter, toggleInList } from "@/lib/storage";
 
 const SWIPE_THRESHOLD = 50;
 
 export function StoryViewer({
   item,
+  saved,
   onClose,
 }: {
   item: FeedItem;
+  saved: boolean;
   onClose: () => void;
 }) {
   const [index, setIndex] = useState(0);
   const style = feedCategoryStyles[item.category];
+
+  function toggleSave() {
+    toggleInList(STORAGE_KEYS.saved, item.id);
+  }
   const touchStartX = useRef<number | null>(null);
   const touchDeltaX = useRef(0);
 
@@ -47,9 +54,13 @@ export function StoryViewer({
     if (typeof navigator !== "undefined" && navigator.share) {
       try {
         await navigator.share({ title: item.title, text, url: item.sourceUrl });
+        incrementCounter(STORAGE_KEYS.shareCount);
       } catch {
         // partage annulé par l'utilisateur
       }
+    } else if (typeof navigator !== "undefined" && navigator.clipboard) {
+      await navigator.clipboard.writeText(`${item.title}\n${item.sourceUrl}`);
+      incrementCounter(STORAGE_KEYS.shareCount);
     }
   }
 
@@ -74,6 +85,16 @@ export function StoryViewer({
           {style.label}
         </span>
         <div className="flex items-center gap-2">
+          <button
+            onClick={toggleSave}
+            aria-label={saved ? "Retirer des sauvegardes" : "Sauvegarder"}
+            className={clsx(
+              "flex h-9 w-9 items-center justify-center rounded-full border transition-colors",
+              saved ? `border-transparent text-white ${style.solid}` : "border-border bg-surface text-foreground/70"
+            )}
+          >
+            <Bookmark size={16} strokeWidth={1.75} fill={saved ? "currentColor" : "none"} />
+          </button>
           <button
             onClick={share}
             aria-label="Partager"
@@ -110,7 +131,7 @@ export function StoryViewer({
                 {i === 0 ? (
                   item.imageUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={item.imageUrl} alt="" className="max-h-64 w-full rounded-2xl object-cover" />
+                    <img src={item.imageUrl} alt={item.title} className="max-h-64 w-full rounded-2xl object-cover" />
                   ) : (
                     <div className={`flex h-40 w-full items-center justify-center rounded-2xl ${style.bg}`}>
                       <span className={`text-[13px] font-semibold ${style.text} opacity-60`}>{item.source}</span>

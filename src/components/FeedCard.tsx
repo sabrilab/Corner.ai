@@ -8,6 +8,7 @@ import {
   ArrowUpRight,
   Users,
   Check,
+  Bookmark,
 } from "lucide-react";
 import { clsx } from "clsx";
 import type { FeedItem } from "@/lib/types";
@@ -25,10 +26,12 @@ const CATEGORY_ICON: Record<FeedItem["category"], typeof FlaskConical> = {
 export function FeedCard({
   item,
   read,
+  saved,
   onOpen,
 }: {
   item: FeedItem;
   read: boolean;
+  saved: boolean;
   onOpen: (item: FeedItem) => void;
 }) {
   const style = feedCategoryStyles[item.category];
@@ -51,7 +54,7 @@ export function FeedCard({
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={item.imageUrl}
-          alt=""
+          alt={item.title}
           loading="lazy"
           className="h-36 w-full rounded-2xl object-cover"
         />
@@ -65,6 +68,12 @@ export function FeedCard({
         {read ? (
           <span className="rounded-full bg-black/10 px-2.5 py-1 text-[10px] font-bold text-black/50">
             Lu
+          </span>
+        ) : null}
+        {saved ? (
+          <span className="flex items-center gap-1 rounded-full bg-black/10 px-2.5 py-1 text-[10px] font-bold text-black/50">
+            <Bookmark size={10} strokeWidth={2.5} fill="currentColor" />
+            Sauvegardé
           </span>
         ) : null}
       </div>

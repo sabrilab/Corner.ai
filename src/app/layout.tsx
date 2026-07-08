@@ -10,8 +10,13 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "corner.ai — ta veille IA",
+  title: "corner — ta veille IA",
   description: "Le coin IA : curation, classement et assistant pour ta veille quotidienne.",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "corner",
+  },
 };
 
 export const viewport = {

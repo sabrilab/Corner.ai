@@ -28,11 +28,12 @@ export async function getFeedItems(): Promise<FeedItem[]> {
     })
   );
 
-  const merged = bySources
-    .filter((r): r is PromiseFulfilledResult<SourcedItem[]> => r.status === "fulfilled")
-    .flatMap((r) => r.value)
-    .sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime())
-    .slice(0, MAX_ITEMS);
+  const merged = dedupeByTitle(
+    bySources
+      .filter((r): r is PromiseFulfilledResult<SourcedItem[]> => r.status === "fulfilled")
+      .flatMap((r) => r.value)
+      .sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime())
+  ).slice(0, MAX_ITEMS);
 
   if (merged.length === 0) return fallbackItems;
 
@@ -88,6 +89,26 @@ function toFeedItem(
       },
     ],
   };
+}
+
+function normalizeTitle(title: string): string {
+  return title
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .slice(0, 60);
+}
+
+function dedupeByTitle(items: SourcedItem[]): SourcedItem[] {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    const key = normalizeTitle(item.title);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 function timeAgo(date: Date): string {
