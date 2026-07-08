@@ -7,7 +7,7 @@ export interface PageMeta {
   image?: string;
 }
 
-export async function fetchPageMeta(url: string): Promise<PageMeta | null> {
+export async function fetchPageMeta(url: string, titleSuffixToStrip?: string): Promise<PageMeta | null> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 6000);
   try {
@@ -32,8 +32,14 @@ export async function fetchPageMeta(url: string): Promise<PageMeta | null> {
       html.match(/<meta[^>]+content=["']([^"']+)["'][^>]*property=["']og:image["']/i);
     const image = imageMatch ? new URL(imageMatch[1], url).toString() : undefined;
 
+    let cleanTitle = title ? decodeHtmlEntities(title).trim() : undefined;
+    if (cleanTitle && titleSuffixToStrip) {
+      const suffixPattern = new RegExp(`\\s*[|\\\\-]?\\s*${escapeRegExp(titleSuffixToStrip)}\\s*$`, "i");
+      cleanTitle = cleanTitle.replace(suffixPattern, "").trim();
+    }
+
     return {
-      title: title ? decodeHtmlEntities(title).replace(/\s*\\?\s*Anthropic\s*$/i, "").trim() : undefined,
+      title: cleanTitle,
       description: description ? decodeHtmlEntities(description) : undefined,
       image,
     };
@@ -42,6 +48,10 @@ export async function fetchPageMeta(url: string): Promise<PageMeta | null> {
   } finally {
     clearTimeout(timeout);
   }
+}
+
+function escapeRegExp(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function decodeHtmlEntities(text: string): string {

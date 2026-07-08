@@ -2,6 +2,7 @@ import { feedSources } from "./feed-sources";
 import { fetchRssItems, type RssItem } from "./rss";
 import { fetchOgImage } from "./og-image";
 import { fetchAnthropicNews } from "./anthropic-blog";
+import { fetchHiggsfieldNews } from "./higgsfield-blog";
 import { summarizeInFrench } from "./summarize";
 import { feedItems as fallbackItems } from "./mock-data";
 import type { FeedItem } from "./types";
@@ -13,10 +14,10 @@ const MAX_SUMMARIES = 12;
 const AI_KEYWORDS =
   /(\bAI\b|\bIA\b|artificial intelligence|intelligence artificielle|OpenAI|Anthropic|Claude|GPT|Gemini|DeepMind|xAI|Grok|LLM|modèle|model|agent|machine learning|neural)/i;
 
-// Ces trois blogs officiels ne doivent jamais être évincés du Feed par des sources secondaires
+// Ces blogs officiels ne doivent jamais être évincés du Feed par des sources secondaires
 // (presse, tweets...) même si celles-ci sont chronologiquement plus récentes.
-const PRIORITY_SOURCES = new Set(["OpenAI", "Google DeepMind", "Anthropic"]);
-const PRIORITY_RESERVED_SLOTS = 6;
+const PRIORITY_SOURCES = new Set(["OpenAI", "Google DeepMind", "Anthropic", "Higgsfield"]);
+const PRIORITY_RESERVED_SLOTS = 8;
 
 interface SourcedItem extends RssItem {
   sourceName: string;
@@ -26,7 +27,7 @@ interface SourcedItem extends RssItem {
 }
 
 export async function getFeedItems(): Promise<FeedItem[]> {
-  const [bySources, anthropicItems] = await Promise.all([
+  const [bySources, anthropicItems, higgsfieldItems] = await Promise.all([
     Promise.allSettled(
       feedSources.map(async (source) => {
         const items = await fetchRssItems(source.url, 4);
@@ -41,8 +42,9 @@ export async function getFeedItems(): Promise<FeedItem[]> {
           .filter((item) => !item.filterKeywords || AI_KEYWORDS.test(`${item.title} ${item.summary}`));
       })
     ),
-    // Pas de flux RSS officiel chez Anthropic : source dédiée basée sur leur sitemap.
+    // Ni Anthropic ni Higgsfield n'ont de flux RSS officiel : sources dédiées via leur sitemap.
     fetchAnthropicNews(4).catch(() => [] as RssItem[]),
+    fetchHiggsfieldNews(4).catch(() => [] as RssItem[]),
   ]);
 
   const anthropicSourced: SourcedItem[] = anthropicItems.map((item) => ({
@@ -50,12 +52,18 @@ export async function getFeedItems(): Promise<FeedItem[]> {
     sourceName: "Anthropic",
     category: "release",
   }));
+  const higgsfieldSourced: SourcedItem[] = higgsfieldItems.map((item) => ({
+    ...item,
+    sourceName: "Higgsfield",
+    category: "content",
+  }));
+  const sitemapSourced: SourcedItem[] = [...anthropicSourced, ...higgsfieldSourced];
 
   const deduped = dedupeByTitle(
     bySources
       .filter((r): r is PromiseFulfilledResult<SourcedItem[]> => r.status === "fulfilled")
       .flatMap((r) => r.value)
-      .concat(anthropicSourced)
+      .concat(sitemapSourced)
       .sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime())
   );
 
