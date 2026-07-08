@@ -5,26 +5,33 @@ import { summarizeInFrench } from "./summarize";
 import { feedItems as fallbackItems } from "./mock-data";
 import type { FeedItem } from "./types";
 
-const MAX_ITEMS = 16;
+const MAX_ITEMS = 18;
 const MAX_OG_IMAGE_LOOKUPS = 12;
-const MAX_SUMMARIES = 10;
+const MAX_SUMMARIES = 12;
+
+const AI_KEYWORDS =
+  /(\bAI\b|\bIA\b|artificial intelligence|intelligence artificielle|OpenAI|Anthropic|Claude|GPT|Gemini|DeepMind|xAI|Grok|LLM|modèle|model|agent|machine learning|neural)/i;
 
 interface SourcedItem extends RssItem {
   sourceName: string;
   category: FeedItem["category"];
   skipImage?: boolean;
+  filterKeywords?: boolean;
 }
 
 export async function getFeedItems(): Promise<FeedItem[]> {
   const bySources = await Promise.allSettled(
     feedSources.map(async (source) => {
       const items = await fetchRssItems(source.url, 4);
-      return items.map<SourcedItem>((item) => ({
-        ...item,
-        sourceName: source.name,
-        category: source.category,
-        skipImage: source.skipImage,
-      }));
+      return items
+        .map<SourcedItem>((item) => ({
+          ...item,
+          sourceName: source.name,
+          category: source.category,
+          skipImage: source.skipImage,
+          filterKeywords: source.filterKeywords,
+        }))
+        .filter((item) => !item.filterKeywords || AI_KEYWORDS.test(`${item.title} ${item.summary}`));
     })
   );
 
@@ -71,12 +78,30 @@ function toFeedItem(
   item: SourcedItem,
   fr: Awaited<ReturnType<typeof summarizeInFrench>>
 ): FeedItem {
+  const isTweet = item.category === "tweet";
+  const sourceUrl = isTweet ? toXUrl(item.link) : item.link;
+
+  if (isTweet) {
+    return {
+      id: item.link,
+      category: item.category,
+      title: item.author || item.sourceName,
+      source: item.sourceName,
+      sourceUrl,
+      publishedAt: timeAgo(item.publishedAt),
+      summary: fr?.cardSummary || item.title,
+      mediaKind: item.image ? "image" : "none",
+      imageUrl: item.image,
+      slides: fr?.slides ?? [{ title: item.author || item.sourceName, body: item.title }],
+    };
+  }
+
   return {
     id: item.link,
     category: item.category,
     title: fr?.title || item.title,
     source: item.sourceName,
-    sourceUrl: item.link,
+    sourceUrl,
     publishedAt: timeAgo(item.publishedAt),
     summary:
       fr?.cardSummary || item.summary || "Pas de résumé disponible, ouvre l'article pour le détail.",
@@ -89,6 +114,15 @@ function toFeedItem(
       },
     ],
   };
+}
+
+function toXUrl(nitterUrl: string): string {
+  try {
+    const url = new URL(nitterUrl);
+    return `https://x.com${url.pathname.replace(/#.*$/, "")}`;
+  } catch {
+    return nitterUrl;
+  }
 }
 
 function normalizeTitle(title: string): string {

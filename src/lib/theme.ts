@@ -52,6 +52,14 @@ export const feedCategoryStyles: Record<
     solid: "bg-rose-500",
     ring: "ring-rose-400",
   },
+  tweet: {
+    label: "Vu sur X",
+    bg: "bg-[#15181c]",
+    text: "text-white",
+    chip: "bg-white/15 text-white",
+    solid: "bg-sky-400",
+    ring: "ring-sky-400",
+  },
 };
 
 export const modelCategoryStyles: Record<

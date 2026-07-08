@@ -6,9 +6,14 @@ export interface RssItem {
   publishedAt: Date;
   summary: string;
   image?: string;
+  author?: string;
 }
 
 const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: "@_" });
+
+// Un vrai user-agent de navigateur : certains miroirs (Nitter) renvoient une réponse vide aux UA de bot.
+const BROWSER_UA =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36";
 
 export async function fetchRssItems(url: string, limit = 5): Promise<RssItem[]> {
   const controller = new AbortController();
@@ -17,7 +22,7 @@ export async function fetchRssItems(url: string, limit = 5): Promise<RssItem[]> 
     const res = await fetch(url, {
       signal: controller.signal,
       next: { revalidate: 3600 },
-      headers: { "user-agent": "Mozilla/5.0 (compatible; cornerai-bot/1.0)" },
+      headers: { "user-agent": BROWSER_UA },
     });
     if (!res.ok) return [];
     const xml = await res.text();
@@ -55,16 +60,22 @@ function normalizeItem(raw: any): RssItem | null {
   const dateStr = raw.pubDate ?? raw.updated ?? raw.published ?? raw["dc:date"];
   const publishedAt = dateStr ? new Date(dateStr) : new Date();
 
-  const descRaw = raw.description ?? raw.summary ?? raw.content ?? "";
-  const summary = stripHtml(typeof descRaw === "string" ? descRaw : descRaw?.["#text"] ?? "").slice(
-    0,
-    220
-  );
+  const descRawValue = raw.description ?? raw.summary ?? raw.content ?? "";
+  const descHtml = typeof descRawValue === "string" ? descRawValue : descRawValue?.["#text"] ?? "";
+  const summary = stripHtml(descHtml).slice(0, 220);
+
+  const inlineImageMatch = descHtml.match(/<img[^>]+src="([^"]+)"/i);
 
   const image: string | undefined =
-    raw.enclosure?.["@_url"] ?? raw["media:content"]?.["@_url"] ?? raw["media:thumbnail"]?.["@_url"];
+    raw.enclosure?.["@_url"] ??
+    raw["media:content"]?.["@_url"] ??
+    raw["media:thumbnail"]?.["@_url"] ??
+    inlineImageMatch?.[1];
 
-  return { title: stripHtml(title), link, publishedAt, summary, image };
+  const authorRaw = raw["dc:creator"];
+  const author = typeof authorRaw === "string" ? authorRaw : undefined;
+
+  return { title: stripHtml(title), link, publishedAt, summary, image, author };
 }
 
 function stripHtml(html: string): string {

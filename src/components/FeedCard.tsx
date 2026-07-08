@@ -9,6 +9,7 @@ import {
   Users,
   Check,
   Bookmark,
+  AtSign,
 } from "lucide-react";
 import { clsx } from "clsx";
 import type { FeedItem } from "@/lib/types";
@@ -21,6 +22,7 @@ const CATEGORY_ICON: Record<FeedItem["category"], typeof FlaskConical> = {
   benchmark: TrendingUp,
   content: ImageIcon,
   moves: Users,
+  tweet: AtSign,
 };
 
 export function FeedCard({
@@ -36,6 +38,7 @@ export function FeedCard({
 }) {
   const style = feedCategoryStyles[item.category];
   const Icon = CATEGORY_ICON[item.category];
+  const isDark = item.category === "tweet";
 
   return (
     <button
@@ -46,7 +49,12 @@ export function FeedCard({
         read && "opacity-45 saturate-[0.35]"
       )}
     >
-      <span className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-[#14151a] text-white">
+      <span
+        className={clsx(
+          "absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full",
+          isDark ? "bg-white/15 text-white" : "bg-[#14151a] text-white"
+        )}
+      >
         {read ? <Check size={16} strokeWidth={2.5} /> : <ArrowUpRight size={16} strokeWidth={2} />}
       </span>
 
@@ -66,12 +74,22 @@ export function FeedCard({
           {style.label}
         </span>
         {read ? (
-          <span className="rounded-full bg-black/10 px-2.5 py-1 text-[10px] font-bold text-black/50">
+          <span
+            className={clsx(
+              "rounded-full px-2.5 py-1 text-[10px] font-bold",
+              isDark ? "bg-white/15 text-white/70" : "bg-black/10 text-black/50"
+            )}
+          >
             Lu
           </span>
         ) : null}
         {saved ? (
-          <span className="flex items-center gap-1 rounded-full bg-black/10 px-2.5 py-1 text-[10px] font-bold text-black/50">
+          <span
+            className={clsx(
+              "flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold",
+              isDark ? "bg-white/15 text-white/70" : "bg-black/10 text-black/50"
+            )}
+          >
             <Bookmark size={10} strokeWidth={2.5} fill="currentColor" />
             Sauvegardé
           </span>

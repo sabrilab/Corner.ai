@@ -22,6 +22,7 @@ import {
 const FILTERS: { label: string; value: FeedCategory | "tous" }[] = [
   { label: "Tous", value: "tous" },
   { label: "Sorties", value: "release" },
+  { label: "Tweets", value: "tweet" },
   { label: "Recherche", value: "paper" },
   { label: "Mises à jour", value: "update" },
   { label: "Dirigeants", value: "moves" },
