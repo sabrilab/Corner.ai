@@ -11,6 +11,8 @@ export async function callLLM(params: {
   messages: ChatMessage[];
   maxTokens: number;
   timeoutMs?: number;
+  /** Durée de cache pour ce contenu exact (mêmes messages = même réponse, inutile de repayer). */
+  cacheSeconds?: number;
 }): Promise<string | null> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) return null;
@@ -33,7 +35,7 @@ export async function callLLM(params: {
         max_tokens: params.maxTokens,
         messages: params.messages,
       }),
-      next: { revalidate: 900 },
+      next: { revalidate: params.cacheSeconds ?? 900 },
     });
     if (!res.ok) return null;
 

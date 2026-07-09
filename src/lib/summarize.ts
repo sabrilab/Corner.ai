@@ -35,6 +35,9 @@ Réponds UNIQUEMENT avec un JSON valide, sans markdown ni texte autour, au forma
   const text = await callLLM({
     messages: [{ role: "user", content: prompt }],
     maxTokens: 600,
+    // Le contenu source ne change jamais pour un même article : pas besoin de repayer
+    // le résumé à chaque revalidation du Feed (toutes les 15 min).
+    cacheSeconds: 60 * 60 * 24 * 14,
   });
   if (!text) return null;
 
