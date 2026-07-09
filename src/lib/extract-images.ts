@@ -1,4 +1,7 @@
 const JUNK_PATTERN = /\b(logo|icon|avatar|favicon|sprite)\b/i;
+// Filtré sur l'URL elle-même : pixels de tracking, photos d'auteur/journaliste (hors sujet de l'article).
+const JUNK_URL_PATTERN =
+  /(analytics|google-analytics|\/collect\?|doubleclick|facebook\.com\/tr|gravatar\.com|author[_-]?profile|profile[_-]?image|headshot|\/avatars?\/|\/authors?\/)/i;
 
 /**
  * Beaucoup de sites servent leurs images via un proxy d'optimisation (Next.js /_next/image,
@@ -36,7 +39,7 @@ export function extractArticleImages(html: string, pageUrl: string, limit = 5): 
     if (width && Number(width) < 200) continue;
 
     const src = tag.match(/\bsrc="([^"]+)"/i)?.[1];
-    if (!src) continue;
+    if (!src || JUNK_URL_PATTERN.test(src)) continue;
 
     const resolved = unwrapImageProxy(src, pageUrl);
     if (!resolved || seen.has(resolved)) continue;
