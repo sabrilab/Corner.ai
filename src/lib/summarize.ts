@@ -1,3 +1,4 @@
+import { callLLM } from "./llm";
 import type { FeedSlide } from "./types";
 
 interface SummarizeInput {
@@ -12,12 +13,7 @@ interface SummarizeResult {
   slides: FeedSlide[];
 }
 
-const MODEL = "claude-haiku-4-5-20251001";
-
 export async function summarizeInFrench(input: SummarizeInput): Promise<SummarizeResult | null> {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) return null;
-
   const prompt = `Tu vulgarises l'actualité IA en français pour une app de veille mobile appelée "corner".
 
 Article source (peut être en anglais) :
@@ -36,31 +32,13 @@ Réponds UNIQUEMENT avec un JSON valide, sans markdown ni texte autour, au forma
   ]
 }`;
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 15000);
+  const text = await callLLM({
+    messages: [{ role: "user", content: prompt }],
+    maxTokens: 600,
+  });
+  if (!text) return null;
 
   try {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      signal: controller.signal,
-      headers: {
-        "content-type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        max_tokens: 600,
-        messages: [{ role: "user", content: prompt }],
-      }),
-      next: { revalidate: 900 },
-    });
-    if (!res.ok) return null;
-
-    const data = await res.json();
-    const text: string | undefined = data?.content?.[0]?.text;
-    if (!text) return null;
-
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) return null;
 
@@ -69,7 +47,5 @@ Réponds UNIQUEMENT avec un JSON valide, sans markdown ni texte autour, au forma
     return parsed;
   } catch {
     return null;
-  } finally {
-    clearTimeout(timeout);
   }
 }

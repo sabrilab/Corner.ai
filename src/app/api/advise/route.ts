@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
+import { callLLM } from "@/lib/llm";
 import { modelEntries } from "@/lib/mock-data";
 
 export const runtime = "nodejs";
-
-const MODEL = "claude-haiku-4-5-20251001";
 
 function heuristicReply(message: string): string {
   const t = message.toLowerCase();
@@ -38,11 +37,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ reply: "Décris-moi ton projet pour que je puisse t'aider." });
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json({ reply: heuristicReply(message) });
-  }
-
   const catalog = modelEntries
     .map((m) => `- ${m.name} (${m.lab}, catégorie ${m.category}, score ${m.score}/100) : ${m.description}`)
     .join("\n");
@@ -53,36 +47,11 @@ ${catalog}
 
 Réponds en français, en 2 à 4 phrases maximum, ton direct et concret. Cite le nom exact d'un ou deux modèles du catalogue. Si le projet est ambigu, pose une question de clarification courte plutôt que de deviner.`;
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 20000);
+  const reply = await callLLM({
+    messages: [{ role: "system", content: system }, ...history, { role: "user", content: message }],
+    maxTokens: 400,
+    timeoutMs: 20000,
+  });
 
-  try {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      signal: controller.signal,
-      headers: {
-        "content-type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        max_tokens: 400,
-        system,
-        messages: [...history, { role: "user", content: message }],
-      }),
-    });
-
-    if (!res.ok) {
-      return NextResponse.json({ reply: heuristicReply(message) });
-    }
-
-    const data = await res.json();
-    const reply: string | undefined = data?.content?.[0]?.text;
-    return NextResponse.json({ reply: reply || heuristicReply(message) });
-  } catch {
-    return NextResponse.json({ reply: heuristicReply(message) });
-  } finally {
-    clearTimeout(timeout);
-  }
+  return NextResponse.json({ reply: reply || heuristicReply(message) });
 }
