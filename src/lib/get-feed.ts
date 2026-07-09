@@ -8,9 +8,9 @@ import { summarizeInFrench } from "./summarize";
 import { feedItems as fallbackItems } from "./mock-data";
 import type { FeedItem } from "./types";
 
-const MAX_ITEMS = 24;
-const MAX_OG_IMAGE_LOOKUPS = 14;
-const MAX_SUMMARIES = 14;
+const MAX_ITEMS = 28;
+const MAX_OG_IMAGE_LOOKUPS = 16;
+const MAX_SUMMARIES = 16;
 
 const AI_KEYWORDS =
   /(\bAI\b|\bIA\b|artificial intelligence|intelligence artificielle|OpenAI|Anthropic|Claude|GPT|Gemini|DeepMind|xAI|Grok|LLM|modèle|model|agent|machine learning|neural)/i;
@@ -35,7 +35,9 @@ const PRIORITY_SOURCES = new Set([
   "Stability AI",
   "Qwen",
 ]);
-const PRIORITY_RESERVED_SLOTS = 16;
+// Nombre d'items garantis PAR source prioritaire, pas au global — sinon les sources les
+// plus prolifiques (OpenAI, Anthropic...) monopolisent la réserve au détriment des autres.
+const GUARANTEED_PER_PRIORITY_SOURCE = 2;
 
 interface SourcedItem extends RssItem {
   sourceName: string;
@@ -197,11 +199,20 @@ function normalizeTitle(title: string): string {
 }
 
 function reservePrioritySlots(items: SourcedItem[]): SourcedItem[] {
-  const priority = items.filter((i) => PRIORITY_SOURCES.has(i.sourceName)).slice(0, PRIORITY_RESERVED_SLOTS);
-  const priorityLinks = new Set(priority.map((i) => i.link));
-  const rest = items.filter((i) => !priorityLinks.has(i.link));
-  const remainingSlots = Math.max(0, MAX_ITEMS - priority.length);
-  const combined = [...priority, ...rest.slice(0, remainingSlots)];
+  const bySource = new Map<string, SourcedItem[]>();
+  for (const item of items) {
+    if (!PRIORITY_SOURCES.has(item.sourceName)) continue;
+    const list = bySource.get(item.sourceName) ?? [];
+    list.push(item);
+    bySource.set(item.sourceName, list);
+  }
+
+  // Chaque source prioritaire garde ses items les plus récents, indépendamment des autres.
+  const guaranteed = [...bySource.values()].flatMap((list) => list.slice(0, GUARANTEED_PER_PRIORITY_SOURCE));
+  const guaranteedLinks = new Set(guaranteed.map((i) => i.link));
+  const rest = items.filter((i) => !guaranteedLinks.has(i.link));
+  const remainingSlots = Math.max(0, MAX_ITEMS - guaranteed.length);
+  const combined = [...guaranteed, ...rest.slice(0, remainingSlots)];
   combined.sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime());
   return combined;
 }
