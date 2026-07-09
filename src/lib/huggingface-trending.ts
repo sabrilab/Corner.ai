@@ -32,6 +32,7 @@ export async function fetchHuggingFaceTrending(limit = 6): Promise<RssItem[]> {
         summary: `Modèle tendance sur Hugging Face${
           m.pipeline_tag ? ` · ${m.pipeline_tag}` : ""
         } · ${m.likes} likes, ${m.downloads.toLocaleString("fr-FR")} téléchargements.`,
+        images: [],
       }));
   } catch {
     return [];

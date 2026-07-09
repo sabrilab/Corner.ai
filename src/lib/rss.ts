@@ -5,7 +5,7 @@ export interface RssItem {
   link: string;
   publishedAt: Date;
   summary: string;
-  image?: string;
+  images: string[];
   author?: string;
 }
 
@@ -64,18 +64,18 @@ function normalizeItem(raw: any): RssItem | null {
   const descHtml = typeof descRawValue === "string" ? descRawValue : descRawValue?.["#text"] ?? "";
   const summary = stripHtml(descHtml).slice(0, 220);
 
-  const inlineImageMatch = descHtml.match(/<img[^>]+src="([^"]+)"/i);
+  // Les tweets (via Nitter) embarquent souvent plusieurs photos dans la description : on les récupère toutes.
+  const inlineImages = [...descHtml.matchAll(/<img[^>]+src="([^"]+)"/gi)].map((m) => m[1]);
 
-  const image: string | undefined =
-    raw.enclosure?.["@_url"] ??
-    raw["media:content"]?.["@_url"] ??
-    raw["media:thumbnail"]?.["@_url"] ??
-    inlineImageMatch?.[1];
+  const primaryImage: string | undefined =
+    raw.enclosure?.["@_url"] ?? raw["media:content"]?.["@_url"] ?? raw["media:thumbnail"]?.["@_url"];
+
+  const images = [...new Set([primaryImage, ...inlineImages].filter((v): v is string => Boolean(v)))];
 
   const authorRaw = raw["dc:creator"];
   const author = typeof authorRaw === "string" ? authorRaw : undefined;
 
-  return { title: stripHtml(title), link, publishedAt, summary, image, author };
+  return { title: stripHtml(title), link, publishedAt, summary, images, author };
 }
 
 function stripHtml(html: string): string {

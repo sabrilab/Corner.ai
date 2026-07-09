@@ -2,7 +2,7 @@ import { feedSources } from "./feed-sources";
 import { sitemapSources } from "./sitemap-sources";
 import { fetchRssItems, type RssItem } from "./rss";
 import { fetchSitemapNews } from "./sitemap-source";
-import { fetchOgImage } from "./og-image";
+import { fetchArticleImages } from "./og-image";
 import { fetchHuggingFaceTrending } from "./huggingface-trending";
 import { summarizeInFrench } from "./summarize";
 import { feedItems as fallbackItems } from "./mock-data";
@@ -110,13 +110,13 @@ export async function getFeedItems(): Promise<FeedItem[]> {
   let imageLookupsLeft = MAX_OG_IMAGE_LOOKUPS;
   const withImages = await Promise.all(
     merged.map(async (item) => {
-      if (item.image) return item;
+      if (item.images.length > 0) return item;
       // Les papiers de recherche et les liens Google News n'ont pas d'image exploitable côté serveur.
       if (item.category === "paper" || item.skipImage) return item;
       if (imageLookupsLeft <= 0) return item;
       imageLookupsLeft -= 1;
-      const image = await fetchOgImage(item.link);
-      return { ...item, image };
+      const images = await fetchArticleImages(item.link);
+      return { ...item, images };
     })
   );
 
@@ -153,8 +153,9 @@ function toFeedItem(
       sourceUrl,
       publishedAt: timeAgo(item.publishedAt),
       summary: fr?.cardSummary || item.title,
-      mediaKind: item.image ? "image" : "none",
-      imageUrl: item.image,
+      mediaKind: item.images.length > 0 ? "image" : "none",
+      imageUrl: item.images[0],
+      images: item.images,
       slides: fr?.slides ?? [{ title: item.author || item.sourceName, body: item.title }],
     };
   }
@@ -168,8 +169,9 @@ function toFeedItem(
     publishedAt: timeAgo(item.publishedAt),
     summary:
       fr?.cardSummary || item.summary || "Pas de résumé disponible, ouvre l'article pour le détail.",
-    mediaKind: item.image ? "image" : "none",
-    imageUrl: item.image,
+    mediaKind: item.images.length > 0 ? "image" : "none",
+    imageUrl: item.images[0],
+    images: item.images,
     slides: fr?.slides ?? [
       {
         title: "L'essentiel",

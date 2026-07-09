@@ -36,7 +36,7 @@ export async function fetchSitemapNews(config: SitemapSourceConfig): Promise<Rss
         link: entry.url,
         publishedAt: entry.lastmod,
         summary: meta.description ?? "",
-        image: meta.image,
+        images: meta.images,
       };
       return item;
     })

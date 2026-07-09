@@ -1,10 +1,13 @@
+import { extractArticleImages, unwrapImageProxy } from "./extract-images";
+
 const BROWSER_UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36";
 
 export interface PageMeta {
   title?: string;
   description?: string;
-  image?: string;
+  /** Plusieurs images de contenu distinctes, dans l'ordre du DOM (og:image en premier). */
+  images: string[];
 }
 
 export async function fetchPageMeta(url: string, titleSuffixToStrip?: string): Promise<PageMeta | null> {
@@ -30,7 +33,10 @@ export async function fetchPageMeta(url: string, titleSuffixToStrip?: string): P
     const imageMatch =
       html.match(/<meta[^>]+property=["']og:image["'][^>]*content=["']([^"']+)["']/i) ??
       html.match(/<meta[^>]+content=["']([^"']+)["'][^>]*property=["']og:image["']/i);
-    const image = imageMatch ? new URL(imageMatch[1], url).toString() : undefined;
+    const ogImage = imageMatch ? unwrapImageProxy(imageMatch[1], url) : null;
+
+    const contentImages = extractArticleImages(html, url, 5);
+    const images = [...new Set([ogImage, ...contentImages].filter((v): v is string => Boolean(v)))].slice(0, 4);
 
     let cleanTitle = title ? decodeHtmlEntities(title).trim() : undefined;
     if (cleanTitle && titleSuffixToStrip) {
@@ -41,7 +47,7 @@ export async function fetchPageMeta(url: string, titleSuffixToStrip?: string): P
     return {
       title: cleanTitle,
       description: description ? decodeHtmlEntities(description) : undefined,
-      image,
+      images,
     };
   } catch {
     return null;

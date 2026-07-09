@@ -16,6 +16,8 @@ export interface FeedItem {
   modelTag?: string;
   mediaKind: "image" | "video" | "none";
   imageUrl?: string;
+  /** Images distinctes disponibles pour cet item, une par slide de la story (dans l'ordre). */
+  images: string[];
   slides: FeedSlide[];
 }
 

@@ -13,6 +13,7 @@ export const feedItems: FeedItem[] = [
       "Fenêtre de contexte élargie, latence réduite et meilleure tenue sur les tâches de raisonnement long.",
     modelTag: "Texte",
     mediaKind: "none",
+    images: [],
     slides: [
       { title: "Ce qui change", body: "Contexte étendu et coûts par token en baisse par rapport à la génération précédente." },
       { title: "Pourquoi ça compte", body: "Les tâches d'agent longue durée deviennent praticables sans découpage manuel du contexte." },
@@ -28,6 +29,7 @@ export const feedItems: FeedItem[] = [
     summary: "Amélioration du suivi d'instructions complexes, coût inchangé.",
     modelTag: "Texte",
     mediaKind: "none",
+    images: [],
     slides: [
       { title: "Le changement", body: "Meilleure adhérence aux formats de sortie demandés (JSON, tableaux, structure imposée)." },
     ],
@@ -41,6 +43,7 @@ export const feedItems: FeedItem[] = [
     publishedAt: "il y a 6h",
     summary: "Une méthode d'entraînement qui réduit le nombre de tokens de raisonnement sans perte de précision.",
     mediaKind: "none",
+    images: [],
     slides: [
       { title: "L'idée clé", body: "Récompenser la concision du raisonnement pendant le fine-tuning par renforcement." },
     ],
