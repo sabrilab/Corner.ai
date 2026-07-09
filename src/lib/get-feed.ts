@@ -1,23 +1,41 @@
 import { feedSources } from "./feed-sources";
+import { sitemapSources } from "./sitemap-sources";
 import { fetchRssItems, type RssItem } from "./rss";
+import { fetchSitemapNews } from "./sitemap-source";
 import { fetchOgImage } from "./og-image";
-import { fetchAnthropicNews } from "./anthropic-blog";
-import { fetchHiggsfieldNews } from "./higgsfield-blog";
+import { fetchHuggingFaceTrending } from "./huggingface-trending";
 import { summarizeInFrench } from "./summarize";
 import { feedItems as fallbackItems } from "./mock-data";
 import type { FeedItem } from "./types";
 
-const MAX_ITEMS = 18;
-const MAX_OG_IMAGE_LOOKUPS = 12;
-const MAX_SUMMARIES = 12;
+const MAX_ITEMS = 24;
+const MAX_OG_IMAGE_LOOKUPS = 14;
+const MAX_SUMMARIES = 14;
 
 const AI_KEYWORDS =
   /(\bAI\b|\bIA\b|artificial intelligence|intelligence artificielle|OpenAI|Anthropic|Claude|GPT|Gemini|DeepMind|xAI|Grok|LLM|modèle|model|agent|machine learning|neural)/i;
 
-// Ces blogs officiels ne doivent jamais être évincés du Feed par des sources secondaires
+// Tutos/guides internes ("comment utiliser telle fonctionnalité") plutôt que de la vraie actu.
+// On garde quand même les comparatifs/reviews de modèles concurrents même s'ils contiennent "how to".
+const TUTORIAL_PATTERN = /\b(guide|tutorial|how ?to|step[- ]by[- ]step|walkthrough)\b/i;
+const NEWS_SIGNAL_PATTERN =
+  /\b(review|comparison|vs\.?|versus|launch(es)?|announc(es?|ing)|unveil(s)?|releas(es?|ing)|update)\b/i;
+
+// Ces sources ne doivent jamais être évincées du Feed par des sources secondaires
 // (presse, tweets...) même si celles-ci sont chronologiquement plus récentes.
-const PRIORITY_SOURCES = new Set(["OpenAI", "Google DeepMind", "Anthropic", "Higgsfield"]);
-const PRIORITY_RESERVED_SLOTS = 8;
+const PRIORITY_SOURCES = new Set([
+  "OpenAI",
+  "Google DeepMind",
+  "Anthropic",
+  "Higgsfield",
+  "Black Forest Labs",
+  "Runway",
+  "Luma AI",
+  "ElevenLabs",
+  "Stability AI",
+  "Qwen",
+]);
+const PRIORITY_RESERVED_SLOTS = 16;
 
 interface SourcedItem extends RssItem {
   sourceName: string;
@@ -26,8 +44,12 @@ interface SourcedItem extends RssItem {
   filterKeywords?: boolean;
 }
 
+function isTutorial(title: string): boolean {
+  return TUTORIAL_PATTERN.test(title) && !NEWS_SIGNAL_PATTERN.test(title);
+}
+
 export async function getFeedItems(): Promise<FeedItem[]> {
-  const [bySources, anthropicItems, higgsfieldItems] = await Promise.all([
+  const [bySources, bySitemaps, hfTrending] = await Promise.all([
     Promise.allSettled(
       feedSources.map(async (source) => {
         const items = await fetchRssItems(source.url, 4);
@@ -42,28 +64,40 @@ export async function getFeedItems(): Promise<FeedItem[]> {
           .filter((item) => !item.filterKeywords || AI_KEYWORDS.test(`${item.title} ${item.summary}`));
       })
     ),
-    // Ni Anthropic ni Higgsfield n'ont de flux RSS officiel : sources dédiées via leur sitemap.
-    fetchAnthropicNews(4).catch(() => [] as RssItem[]),
-    fetchHiggsfieldNews(4).catch(() => [] as RssItem[]),
+    // Ces labs/plateformes n'ont pas de flux RSS officiel : détection via leur sitemap.
+    Promise.allSettled(
+      sitemapSources.map(async (source) => {
+        const items = await fetchSitemapNews({
+          sitemapUrl: source.sitemapUrl,
+          pathPattern: source.pathPattern,
+          titleSuffixToStrip: source.titleSuffixToStrip,
+          limit: 4,
+        });
+        return items
+          .map<SourcedItem>((item) => ({ ...item, sourceName: source.name, category: source.category }))
+          .filter((item) => !source.excludeTutorials || !isTutorial(item.title));
+      })
+    ),
+    // Filet de sécurité large-spectre : les modèles open-weight tendance, tous labs confondus.
+    fetchHuggingFaceTrending(6).catch(() => [] as RssItem[]),
   ]);
 
-  const anthropicSourced: SourcedItem[] = anthropicItems.map((item) => ({
+  const hfSourced: SourcedItem[] = hfTrending.map((item) => ({
     ...item,
-    sourceName: "Anthropic",
+    sourceName: "Hugging Face · Tendances",
     category: "release",
   }));
-  const higgsfieldSourced: SourcedItem[] = higgsfieldItems.map((item) => ({
-    ...item,
-    sourceName: "Higgsfield",
-    category: "content",
-  }));
-  const sitemapSourced: SourcedItem[] = [...anthropicSourced, ...higgsfieldSourced];
 
   const deduped = dedupeByTitle(
     bySources
       .filter((r): r is PromiseFulfilledResult<SourcedItem[]> => r.status === "fulfilled")
       .flatMap((r) => r.value)
-      .concat(sitemapSourced)
+      .concat(
+        bySitemaps
+          .filter((r): r is PromiseFulfilledResult<SourcedItem[]> => r.status === "fulfilled")
+          .flatMap((r) => r.value)
+      )
+      .concat(hfSourced)
       .sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime())
   );
 
