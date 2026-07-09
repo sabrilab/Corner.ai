@@ -177,16 +177,14 @@ export function StoryViewer({
               className="flex h-full w-full shrink-0 flex-col justify-center gap-5 overflow-y-auto overscroll-contain px-6 py-4"
             >
               <div className="mx-auto flex w-full max-w-md flex-col gap-4">
-                {i === 0 ? (
-                  item.imageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={item.imageUrl} alt={item.title} className="max-h-64 w-full rounded-2xl object-cover" />
-                  ) : (
-                    <div className={`flex h-40 w-full items-center justify-center rounded-2xl ${style.bg}`}>
-                      <span className={`text-[13px] font-semibold ${style.text} opacity-60`}>{item.source}</span>
-                    </div>
-                  )
-                ) : null}
+                {item.imageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={item.imageUrl} alt={item.title} className="max-h-64 w-full rounded-2xl object-cover" />
+                ) : (
+                  <div className={`flex h-40 w-full items-center justify-center rounded-2xl ${style.bg}`}>
+                    <span className={`text-[13px] font-semibold ${style.text} opacity-60`}>{item.source}</span>
+                  </div>
+                )}
 
                 <div className="text-[13px] font-medium text-foreground/50">
                   {item.source} · {item.publishedAt}
