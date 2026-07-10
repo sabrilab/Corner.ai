@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, RotateCcw, Info, ExternalLink } from "lucide-react";
 import { STORAGE_KEYS } from "@/lib/storage";
+import { PushToggle } from "@/components/PushToggle";
 
 export default function ReglagesPage() {
   const [confirmingReset, setConfirmingReset] = useState(false);
@@ -22,6 +23,11 @@ export default function ReglagesPage() {
       </Link>
 
       <h1 className="text-xl font-extrabold tracking-tight text-foreground">Réglages</h1>
+
+      <div className="flex flex-col gap-3">
+        <h2 className="text-[13px] font-bold uppercase tracking-wide text-foreground/40">Notifications</h2>
+        <PushToggle />
+      </div>
 
       <div className="flex flex-col gap-3">
         <h2 className="text-[13px] font-bold uppercase tracking-wide text-foreground/40">Progression</h2>
