@@ -14,6 +14,7 @@ import {
 import { clsx } from "clsx";
 import type { FeedItem } from "@/lib/types";
 import { feedCategoryStyles } from "@/lib/theme";
+import { getCoverEmoji } from "@/lib/cover-emoji";
 
 const CATEGORY_ICON: Record<FeedItem["category"], typeof FlaskConical> = {
   release: TrendingUp,
@@ -68,7 +69,14 @@ export function FeedCard({
           loading="lazy"
           className="h-36 w-full rounded-2xl object-cover"
         />
-      ) : null}
+      ) : (
+        <div
+          className={`relative flex h-36 w-full items-center justify-center overflow-hidden rounded-2xl ${style.solid}`}
+        >
+          <span className="absolute -bottom-3 -right-2 text-7xl opacity-25">{getCoverEmoji(item)}</span>
+          <span className="text-5xl drop-shadow-sm">{getCoverEmoji(item)}</span>
+        </div>
+      )}
 
       <div className="flex items-center gap-2 pr-10 text-[11px] font-bold uppercase tracking-wide">
         <span className={`flex items-center gap-1 rounded-full ${style.chip} px-2.5 py-1`}>

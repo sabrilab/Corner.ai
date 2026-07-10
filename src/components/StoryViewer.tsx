@@ -6,6 +6,7 @@ import { ArrowLeft, Share2, ArrowUpRight, Bookmark } from "lucide-react";
 import { clsx } from "clsx";
 import type { FeedItem } from "@/lib/types";
 import { feedCategoryStyles } from "@/lib/theme";
+import { getCoverEmoji } from "@/lib/cover-emoji";
 import { POINTS, STORAGE_KEYS, awardOnce, awardPoints, incrementCounter, toggleInList } from "@/lib/storage";
 
 const SWIPE_THRESHOLD = 50;
@@ -181,8 +182,9 @@ export function StoryViewer({
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={item.images[i]} alt={item.title} className="max-h-64 w-full rounded-2xl object-cover" />
                 ) : (
-                  <div className={`flex h-40 w-full items-center justify-center rounded-2xl ${style.bg}`}>
-                    <span className={`text-[13px] font-semibold ${style.text} opacity-60`}>{item.source}</span>
+                  <div className={`relative flex h-40 w-full items-center justify-center overflow-hidden rounded-2xl ${style.solid}`}>
+                    <span className="absolute -bottom-3 -right-2 text-8xl opacity-25">{getCoverEmoji(item)}</span>
+                    <span className="text-6xl drop-shadow-sm">{getCoverEmoji(item)}</span>
                   </div>
                 )}
 
