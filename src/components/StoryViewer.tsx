@@ -158,6 +158,12 @@ export function StoryViewer({
         </div>
       </div>
 
+      <div className="px-6 pb-2">
+        <h1 className="line-clamp-2 text-[15px] font-extrabold leading-snug tracking-tight text-foreground">
+          {item.title}
+        </h1>
+      </div>
+
       <div
         className="relative flex-1 overflow-hidden"
         onTouchStart={onTouchStart}
